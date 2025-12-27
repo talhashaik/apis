@@ -1,0 +1,446 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace KCF_Auctions_Infrastructure.LegalNotice.LegalNotice
+{
+    public class FarReports
+    {
+        public class FinanceyearDTO
+        {
+            public object pRecordid { set; get; }
+            public object pFinanceyearDate { set; get; }
+            public string pfromdate { get; set; }
+            public string ptodate { get; set; }
+
+        }
+        public class AssetssaleDTO
+        {
+            public Int64 psaleid { get; set; }
+            public string pDateofSale { get; set; }
+            public string pMainAssetCode { get; set; }
+            public string pAssetCode { get; set; }
+            public decimal pCostOfAsset { get; set; }
+            public string natureofasset { get; set; }
+            public string psubclassificationofasset { get; set; }
+            public string pbranchname { get; set; }
+            public string pSoldTo { get; set; }
+            public string  pGSTIN { get; set; }
+            public string pPAN { get; set; }
+            public decimal pSaleValue { get; set; }
+            public decimal pCGST { get; set; }
+            public decimal pSGST { get; set; }
+            public decimal pIGST { get; set; }
+            public decimal pTotalSaleValue { get; set; }
+            public decimal pDescriptionClaimedDate { get; set; }
+            public decimal pwdvCarryingValue { get; set; }
+            public string pProfitLoss { get; set; }            
+            public decimal pDescriptionClaimedDateForIncomeTax { get; set; }
+            public decimal pwdvCarryingValueForIncomeTax { get; set; }
+            public string pProfitLossForIncomeTax { get; set; }          
+            public Int64 pcreatedby { get; set; }
+            public string pcreateddate { get; set; }
+            public string ptypeofoperation { get; set; }
+            public List<AssetssaleDetailsDTO> AssetssaleDetailslist { get; set; }
+        }
+
+        public class AssetssaleDetailsDTO
+        {
+            public Int64 psaleid { get; set; }
+            public Int64 psaledetailsid { get; set; }
+            public string pDateofSale { get; set; }
+            public string pMainAssetCode { get; set; }
+            public string pAssetCode { get; set; }
+            public decimal pCostOfAsset { get; set; }
+            public string natureofasset { get; set; }
+            public string psubclassificationofasset { get; set; }
+            public decimal pSaleValue { get; set; }
+            public decimal pCGST { get; set; }
+            public decimal pSGST { get; set; }
+            public decimal pIGST { get; set; }
+            public decimal pTotalSaleValue { get; set; }
+            public decimal pDescriptionClaimedDate { get; set; }
+            public decimal pwdvCarryingValue { get; set; }
+            public string pProfitLoss { get; set; }
+            public decimal pDescriptionClaimedDateForIncomeTax { get; set; }
+            public decimal pwdvCarryingValueForIncomeTax { get; set; }
+            public string pProfitLossForIncomeTax { get; set; }
+            public Int64 pcreatedby { get; set; }
+            public string pcreateddate { get; set; }
+            public string ptypeofoperation { get; set; }
+        }
+
+        public class AssetsSeriesDTO
+        {
+            public string pAssetcode { get; set; }
+            public string pNameoftheasset { get; set; }
+            public decimal pAssatamount { get; set; }
+            public decimal pslmratecompaniesactpctg { get; set; }
+            public decimal pDepreciationClaimedDate { get; set; }
+            public decimal pDescriptionClaimedDateForIncomeTax { get; set; }
+            public string pinvoicedate { get; set; }
+            public string pdateofsale { get; set; }
+
+       
+
+        }
+        public class AssetssaleReportDTO
+        {
+            public Int64 precordid { get; set; }
+            public string pnameofasset { get; set; }
+            public string passetcode { get; set; }
+            public string pfinancialyear { get; set; }
+            public decimal popenvalueofgrossblock { get; set; }
+            public decimal pvalueofadditionpurchase { get; set; }
+            public decimal pdeletionsalevalue { get; set; }
+            public decimal pclosingvalueofgrossblock { get; set; }
+            public decimal puptopreviousyear { get; set; }
+            public decimal psalewrittenback { get; set; }
+            public decimal pfortheyear { get; set; }
+            public decimal puptocurrentfinancialyear { get; set; }
+            public decimal pclosingvalue { get; set; }
+            public decimal popenvalue { get; set; }
+
+        }
+
+        public class FarreporstFinalcialyearDTO
+        {
+            public List<FarreporstDTO> pforcompanyact { get; set; }
+            public List<IncometaxreportDTO> pincomtax { get; set; }
+
+        }
+
+        public class FarreporstDTO
+        {
+            public Int64 precordid { get; set; }
+            public string pfinancialyear { get; set; }
+            public string passetcode { get; set; }
+            public string pnameofasset { get; set; }
+            public decimal popenvalueofgrossblock { get; set; }
+            public decimal pvalueofadditionpurchase { get; set; }
+            public decimal pdeletionsalevalue { get; set; }
+            public decimal pclosingvalueofgrossblock { get; set; }
+            public decimal puptopreviousyear { get; set; }
+            public decimal psalewrittenback { get; set; }
+            public decimal pfortheyear { get; set; }
+            public decimal puptocurrentfinancialyear { get; set; }
+            public decimal pclosingvalue { get; set; }
+            public decimal popenvalue { get; set; }
+            public Int64 createdby { get; set; }
+
+        }
+        public class financialyearcount
+        {
+            public int count { get; set; }
+        }
+        //    public class DocumentDTO
+        //    {
+        //        public List<DocumenttypeDTO> Documenttype { get; set; }
+
+
+        //    }
+        //}
+        public class DocumenttypeDTO
+        {
+            public Int64 pdocumentid { get; set; }
+            public string pdocumenttype { get; set; }
+
+        }
+        public class IncometaxreportDTO 
+        {
+            public Int64 precordid { get; set; }
+            public string  pfinacialyear { get; set; }
+            public string  passetcode { get; set; }
+            public string  passetname { get; set; }
+            public decimal  popenvalueofgrossblock { get; set; }
+            public decimal  ppurchasebefore30sep { get; set; }
+            public decimal ppurchaseafter30sep { get; set; }
+            public decimal psalebefore30sep { get; set; }
+            public decimal psaleafter30sep { get; set; }
+            public decimal ptotal { get; set; }
+            public decimal pdeponsalebefore30sep { get; set; }
+            public decimal pdeponsaleafter30sep { get; set; }
+            public decimal ptotaldepfortheyear { get; set; }
+            public decimal pclosingvalue { get; set; }
+            public Int64 pcreatedby { get; set; }
+
+
+
+        }
+
+        public class listVehicleReportDTO
+        {
+            public List<VehicleReportDTO> pForVehicleReport { get; set; }
+        }
+
+        public class VehicleReportDTO
+        {
+            public Int64 precordid { get; set; }
+            public Int64 pdetailsid { get; set; }
+            public string pnameofasset { get; set; }
+            public string pbrandofasset { get; set; }
+            public string passetcode { get; set; }
+            public string pfinancialyear { get; set; }
+            public string pinvoicedate { get; set; }
+            public decimal popenvalueofgrossblock { get; set; }
+            public decimal pdepreciationvalue { get; set; }
+            public decimal psalevalue { get; set; }
+            public decimal pdepopening { get; set; }
+            public decimal pvalueofadditionpurchase { get; set; }
+            public decimal pdeletionsalevalue { get; set; }
+            public decimal pclosingvalueofgrossblock { get; set; }
+            public decimal pdeprisacationsale { get; set; }
+            public decimal puptopreviousyear { get; set; }
+            public decimal psalewrittenback { get; set; }
+            public decimal pfortheyear { get; set; }
+            public decimal puptocurrentfinancialyear { get; set; }
+            public decimal pclosingvalue { get; set; }
+            public string pchassisno { get; set; }
+            public string pengineno { get; set; }
+            public string pvehicleassignedto { get; set; }
+            public string pmodelno { get; set; }
+            public string pfueltype { get; set; }
+            public string pvehicleregno { get; set; }
+            public string pvehiclercno { get; set; }
+            public string ploaction { get; set; }
+            public string passetcodes { get; set; }
+            public string pdepartment { get; set; }
+            public decimal pdicrease_estimatedlife { get; set; }
+            public decimal pestimatedlifeof_asset { get; set; }
+            public decimal presudualsvalue { get; set; }
+            public decimal pwdvscarringvalue { get; set; }
+
+
+        }
+        public class AssetsTransferDTO
+        {
+            public Int64 ptransferid { get; set; }
+            public string pdateoftransfer { get; set; }
+            public string pmainassetcode { get; set; }
+           // public string passetcode { get; set; }        
+            //public List<AssetCodeDTO> passetcode { get; set; }
+
+            public string passetname { get; set; }           
+            public string psubclassificationofasset { get; set; }           
+            public string pexistingholder { get; set; }
+            public string ptolcation { get; set; }
+            public string ptodepartment { get; set; }
+            public string pnewholder { get; set; }
+            public string ptransferauthorizedby { get; set; }
+            public string pbranchname { get; set; }
+            public decimal pdepreciationclaimedtilldate { get; set; }
+            public decimal pcompanywdvcarryingvaluetransfer { get; set; }
+            public decimal pincomtaxwdvdepreciationclaimedtilldate { get; set; }
+            public decimal pincometaxwdvcarryingvaluetransfer { get; set; }
+            public Int64 pcreatedby { get; set; }
+            public string pcreateddate { get; set; }
+            public string ptypeofoperation { get; set; }
+            public decimal pCostOfAsset { get; set; }
+            public List<AssetsTransferDatsilsDTO> TransferDatsilsList { get; set; }
+
+
+        }
+        public class AssetCodeDTO
+        {
+            public string pAssetcode { get; set; }
+        }
+
+
+
+        public class AssetsTransferDatsilsDTO
+        {
+            public Int64 ptransferid { get; set; }
+            public Int64 ptransferetailsid { get; set; }
+            public string pdateoftransfer { get; set; }
+            public string pmainassetcode { get; set; }
+            // public string passetcode { get; set; }
+            public List<AssetCodeDTO> passetcode { get; set; }
+            public string passetname { get; set; }
+            public string pbranchname { get; set; }
+            public string psubclassificationofasset { get; set; }
+            public decimal pdepreciationclaimedtilldate { get; set; }
+            
+            public decimal pcompanywdvcarryingvaluetransfer { get; set; }
+            public decimal pincomtaxwdvdepreciationclaimedtilldate { get; set; }
+            public decimal pincometaxwdvcarryingvaluetransfer { get; set; }
+            public Int64 pcreatedby { get; set; }
+            public string pcreateddate { get; set; }
+            public string ptypeofoperation { get; set; }
+            public Int64 pmodifyedby { get; set; }
+            public string pmodifyedddate { get; set; }
+        }
+
+        public class AssetsInvoiceDTO
+        {
+            public Int64 precordid { get; set; }
+            public string pinvoiceno { get; set; }
+
+
+        }
+
+        //used
+        public class AssetsInvoiceDetailsDTO
+        {
+
+            public string ptransaction_date { get; set; }
+            public string pinvoice_date { get; set; }
+            public string pinvoice_number { get; set; }
+
+            public string pvendor_name { get; set; }
+            public string pcustodyat { get; set; }
+
+            public string passet_name { get; set; }
+            public string passet_brand { get; set; }
+            public Int64 pquantity { get; set; }
+            public decimal prate { get; set; }
+            public Int64 pfreight { get; set; }
+
+            public Int64 pcgst_percentage { get; set; }
+            public Int64 psgst_percentage { get; set; }
+            public Int64 pigst_percentage { get; set; }
+            public Int64 pcess_percentage { get; set; }
+            public Int64 ptcs_percentage { get; set; }
+            public Int64 pinstallationcost { get; set; }
+
+            public string pvehiclercno { get; set; }
+            public string pvehicleregno { get; set; }
+
+            public string pchassisno { get; set; }
+            public string pengineno { get; set; }
+            public string pmodelno { get; set; }
+
+            public string pfueltype { get; set; }
+
+            public string pvehicleassignedto { get; set; }
+            public string pdepartment { get; set; }
+            public string ploaction { get; set; }
+            public string pvehicle_type { get; set; }
+            public string pbranchname { get; set; }
+
+            public string pinsurancefrom { get; set; }
+            public string pinsuranceto { get; set; }
+            public string pwarrantyfrom { get; set; }
+            public string pwarrantyto { get; set; }
+
+            public string pamcenddate { get; set; }
+            public Int64 createdby { get; set; }
+
+
+        }
+        public class Assetsdto1
+        {
+            public string pinvoice_number { get; set; }
+            public string pcustodyat { get; set; }
+            public string ptypeofoperation { get; set; }
+            public string pinvoice_date { get; set; }
+            public string pvendor_name { get; set; }
+            public Int64 pfreight { get; set; }
+            public decimal pinstallationcost { get; set; }
+            // public string pinsurance { get; set; }
+            public string pinsurancefrom { get; set; }
+            public string pinsuranceto { get; set; }
+            public string createddate { get; set; }
+            public Int64 createdby { get; set; }
+            public Int64 pmodifiedby { get; set; }
+            public string pmodifieddate { get; set; }
+            public decimal pgrandtotal { get; set; }
+            public string pwarrantyfrom { get; set; }
+            public string pwarrantyto { get; set; }
+            public string pamc { get; set; }
+            public string pamcenddate { get; set; }
+            public List<assetsinvoiceinfo> invoicelist { get; set; }
+            // public List<assetsinvoiceinfo> assetsinvoiceinfo { get; set; }
+            public List<assetstransactions> assetstransactions { get; set; }
+
+        }
+        public class assetsinvoiceinfo
+        {
+            public string ptypeofoperation { get; set; }
+            public string pinvoice_number { get; set; }
+            public string passet_name { get; set; }
+            public string passet_brand { get; set; }
+            public Int64 pquantity { get; set; }
+            public decimal prate { get; set; }
+            public Int64 pcgst_percentage { get; set; }
+            public Int64 psgst_percentage { get; set; }
+            public Int64 pigst_percentage { get; set; }
+            public Int64 pcess_percentage { get; set; }
+            public Int64 ptcs_percentage { get; set; }
+            public decimal pfreight { get; set; }
+            public decimal pinstallationcost { get; set; }
+            public string pchassisno { get; set; }
+            public string pengineno { get; set; }
+            public string pfueltype { get; set; }
+            public string pvehicleregno { get; set; }
+            public string ploaction { get; set; }
+            public string pdepartment { get; set; }
+            public string pvehiclercno { get; set; }
+            public string pvehicle_type { get; set; }
+            public string pcustodyat { get; set; }
+            public string pmodelno { get; set; }
+            public string createddate { get; set; }
+            public Int64 createdby { get; set; }
+            public Int64 pmodifiedby { get; set; }
+            public string pmodifieddate { get; set; }
+            // public string invoice_date { get; set; }
+            public decimal pcgstvalue { get; set; }
+            public decimal psgstvalue { get; set; }
+            public decimal pigstvalue { get; set; }
+            public decimal pcesstvalue { get; set; }
+            public decimal ptcsvalue { get; set; }
+            // public decimal passetsamount { get; set; }
+            //public string asset_code { get; set; }
+        }
+        public class assetstransactions
+        {
+            public string pinvoice_number { get; set; }
+            //public string transactionno { get; set; }
+            public string pnarration { get; set; }
+            public string pparticulars { get; set; }
+            //public decimal ptransaction_amount { get; set; }
+            //public decimal pinvoiceamount { get; set; }
+            public string pbranchname { get; set; }
+            //public string pbranchschema { get; set; }
+            public string createddate { get; set; }
+            public Int64 createdby { get; set; }
+            public Int64 pmodifiedby { get; set; }
+            public string pmodifieddate { get; set; }
+            public string pcustodyat { get; set; }
+            //public string ptransaction_date { get; set; }
+
+        }
+        public class VechileBranchDTO
+        {
+            public string pbranchname { get; set; }
+          
+
+        }
+        public class LaptopInfoDTO
+        {
+            public string ptypeofoperation { get; set; }
+            public string company_name { get; set; }
+            public string branch_name { get; set; }
+            public string custodyat { get; set; }
+            public string designation { get; set; }
+            public string serial_no { get; set; }
+            public string purchaseddate { get; set; }
+            public string laptop_brand { get; set; }
+            public int created_by { get; set; }
+        }
+        public class CompanyDTO
+        {
+            public string pBranchname { set; get; }
+            public string pBranchSchema { set; get; }
+            public string pConnectionstring { set; get; }
+            public List<CompanydetailsDTO> ComList { get; set; }
+
+
+        }
+
+
+        public class CompanydetailsDTO
+        {
+            public string vchcompanyname { get; set; }
+        }
+    }
+}
