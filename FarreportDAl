@@ -1,0 +1,1778 @@
+using HelperManager;
+using KCF_Auctions_Repository.Interfaces.LegalNotice;
+using Npgsql;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Text;
+using static KCF_Auctions_Infrastructure.LegalNotice.LegalNotice.FarReports;
+
+namespace KCF_Auctions_Repository.DataAccess.LegalNotice
+{
+    public class FarReportsDAL : IFarReports
+    {
+        NpgsqlConnection con = null;
+        NpgsqlTransaction trans = null;
+        NpgsqlDataReader dr = null;
+        DataSet ds = null;
+        public static string FormatDate(string strDate)
+        {
+            string Date = null;
+            if (!string.IsNullOrEmpty(strDate))
+            {
+                strDate = Convert.ToDateTime(strDate).ToString("dd-MM-yyyy");
+
+                string[] dat = null;
+                if (strDate != null)
+                {
+                    if (strDate.Contains("/"))
+                    {
+                        dat = strDate.Split('/');
+                    }
+                    else if (strDate.Contains("-"))
+                    {
+                        dat = strDate.Split('-');
+                    }
+                    Date = dat[2] + "-" + dat[1] + "-" + dat[0];
+                }
+            }
+            return Date;
+        }
+
+        public static object AddDoubleQuotes(object value)
+        {
+            return "\"" + value + "\"";
+        }
+        public List<FinanceyearDTO> GetFinanceyears(string connectionString)
+        {
+            List<FinanceyearDTO> Financeyears = new List<FinanceyearDTO>();
+            try
+            {
+
+                string Query = "select recordid,financialyear,fromdate,todate from tabfinancialyear";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        FinanceyearDTO obj = new FinanceyearDTO();
+                        obj.pRecordid = Convert.ToInt64(dr["recordid"]);
+                        obj.pFinanceyearDate = Convert.ToString(dr["financialyear"]);
+                        obj.pfromdate = dr["fromdate"] != DBNull.Value ? Convert.ToDateTime(dr["fromdate"]).ToString("yyyy/MM/dd") : "";
+                        obj.ptodate = dr["todate"] != DBNull.Value ? Convert.ToDateTime(dr["todate"]).ToString("yyyy/MM/dd  ") : "";
+
+                        Financeyears.Add(obj);
+
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            return Financeyears;
+        }
+        public bool SaveAssetssale(string Con, AssetssaleDTO _obj)
+        {
+            bool isSaved = false;
+            StringBuilder sbinsert = new StringBuilder();
+            NpgsqlTransaction trans = null;
+            Int64 saleid = 0;
+
+
+            con = new NpgsqlConnection(Con);
+            if (con.State != ConnectionState.Open)
+            {
+                con.Open();
+            }
+            trans = con.BeginTransaction();
+            try
+            {
+                if (_obj.ptypeofoperation == "CREATE")
+                {
+                    saleid = Convert.ToInt64(NPGSqlHelper.ExecuteScalar(trans, CommandType.Text, "INSERT INTO tabsaleofassets(dateofsale, mainassetcode, assetcode,assetname,subclassificationofasset,branchname, originalcostofasset, soldto, gstin, pan, salevalue, cgst, sgst, igst, totalsalevalue, depreciation_claimed_tilldate,company_wdv_carrying_value_sale,company_wdv_profit_loss_onsale,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_sale,incometax_wdv_profit_loss_onsale,statusid, createdby, createddate)    VALUES('" + FormatDate(_obj.pDateofSale) + "','" + _obj.pMainAssetCode + "','" + _obj.pAssetCode + "','" + _obj.natureofasset + "','" + _obj.psubclassificationofasset + "','" + _obj.pbranchname + "'," + _obj.pCostOfAsset + ",'" + _obj.pSoldTo + "', '" + _obj.pGSTIN + "', '" + _obj.pPAN + "'," + _obj.pSaleValue + ", " + _obj.pCGST + ", " + _obj.pSGST + ", " + _obj.pIGST + ", " + _obj.pTotalSaleValue + ", " + _obj.pDescriptionClaimedDate + ", " + _obj.pwdvCarryingValue + ", '" + _obj.pProfitLoss + "', " + _obj.pDescriptionClaimedDateForIncomeTax + "," + _obj.pwdvCarryingValueForIncomeTax + ",'" + _obj.pProfitLossForIncomeTax + "',1, " + _obj.pcreatedby + ",current_timestamp ) returning saleid; "));
+                }
+                for (int i = 0; i < _obj.AssetssaleDetailslist.Count; i++)
+
+                {
+
+                    sbinsert.Append("INSERT INTO tabsaleofassetdetails(saleid,dateofsale, mainassetcode, assetcode,assetname,subclassificationofasset,branchname,originalcostofasset,salevalue, cgst, sgst, igst, totalsalevalue, depreciation_claimed_tilldate,company_wdv_carrying_value_sale,company_wdv_profit_loss_onsale,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_sale,incometax_wdv_profit_loss_onsale,statusid, createdby, createddate)    VALUES(" + saleid + ",'" + FormatDate(_obj.pDateofSale) + "','" + _obj.pMainAssetCode + "','" + _obj.pAssetCode + "','" + _obj.natureofasset + "','" + _obj.psubclassificationofasset + "','" + _obj.pbranchname + "'," + _obj.pCostOfAsset + "," + _obj.pSaleValue + ", " + _obj.pCGST + ", " + _obj.pSGST + ", " + _obj.pIGST + ", " + _obj.pTotalSaleValue + ", " + _obj.pDescriptionClaimedDate + ", " + _obj.pwdvCarryingValue + ", '" + _obj.pProfitLoss + "', " + _obj.pDescriptionClaimedDateForIncomeTax + "," + _obj.pwdvCarryingValueForIncomeTax + ",'" + _obj.pProfitLossForIncomeTax + "',1, " + _obj.pcreatedby + ",current_timestamp); ");
+
+                    //sbinsert.Append("update tabassetseriesdetails set status = 'sale'  where mainassetcode = '" + _obj.pMainAssetCode + "' and assetcode = '" + _obj.pAssetCode + "'; ");
+
+
+                    sbinsert.Append("UPDATE tabassetseriesdetails SET status='sale', modifiedby=" + _obj.pcreatedby + ", modifieddate=current_timestamp " +
+                                  "WHERE mainassetcode='" + _obj.pMainAssetCode + "' AND assetcode='" + _obj.pAssetCode + "';");
+                }
+                if (!string.IsNullOrEmpty(sbinsert.ToString()))
+                {
+                    NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+                }
+                trans.Commit();
+                isSaved = true;
+
+
+            }
+            catch (Exception Ex)
+            {
+                throw Ex;
+                trans.Rollback();
+                isSaved = false;
+            }
+            return isSaved;
+
+        }
+
+
+
+
+
+        //public bool SaveAssetssale(string Con, AssetssaleDTO _obj)
+
+        //{
+        //    bool isSaved = false;
+        //    StringBuilder sbinsert = new StringBuilder();
+        //    NpgsqlTransaction trans = null;
+        //    Int64 saleid = 0;
+
+
+        //    con = new NpgsqlConnection(Con);
+        //    if (con.State != ConnectionState.Open)
+        //    {
+        //        con.Open();
+        //    }
+        //    trans = con.BeginTransaction();
+        //    try
+        //    {
+        //        if (_obj.ptypeofoperation == "CREATE")
+        //        {
+        //            saleid = Convert.ToInt64(NPGSqlHelper.ExecuteScalar(trans, CommandType.Text, "INSERT INTO tabsaleofassets(dateofsale, mainassetcode, assetcode,assetname,subclassificationofasset,branchname, originalcostofasset, soldto, gstin, pan, salevalue, cgst, sgst, igst, totalsalevalue, depreciation_claimed_tilldate,company_wdv_carrying_value_sale,company_wdv_profit_loss_onsale,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_sale,incometax_wdv_profit_loss_onsale,statusid, createdby, createddate)    VALUES('" + FormatDate(_obj.pDateofSale) + "','" + _obj.pMainAssetCode + "','" + _obj.pAssetCode + "','" + _obj.natureofasset + "','" + _obj.psubclassificationofasset + "','" + _obj.pbranchname + "','" + _obj.pCostOfAsset + "','" + _obj.pSoldTo + "', '" + _obj.pGSTIN + "', '" + _obj.pPAN + "','" + _obj.pSaleValue + "', '" + _obj.pCGST + "', '" + _obj.pSGST + "', '" + _obj.pIGST + "', '" + _obj.pTotalSaleValue + "', '" + _obj.pDescriptionClaimedDate + "', '" + _obj.pwdvCarryingValue + "', '" + _obj.pProfitLoss + "', '" + _obj.pDescriptionClaimedDateForIncomeTax + "','" + _obj.pwdvCarryingValueForIncomeTax + "','" + _obj.pProfitLossForIncomeTax + "',1, '" + _obj.pcreatedby + "',current_timestamp ) returning saleid; "));
+        //        }
+        //        for (int i = 0; i < _obj.AssetssaleDetailslist.Count; i++)
+
+        //        {
+        //            sbinsert.Append("INSERT INTO tabsaleofassetdetails(saleid,dateofsale, mainassetcode, assetcode,assetname,subclassificationofasset,branchname, originalcostofasset,salevalue, cgst, sgst, igst, totalsalevalue, depreciation_claimed_tilldate,company_wdv_carrying_value_sale,company_wdv_profit_loss_onsale,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_sale,incometax_wdv_profit_loss_onsale,statusid, createdby, createddate)    VALUES(" + saleid + ",'" + FormatDate(_obj.pDateofSale) + "','" + _obj.pMainAssetCode + "','" + _obj.pAssetCode + "','" + _obj.natureofasset + "','" + _obj.psubclassificationofasset + "','" + _obj.pbranchname + "','" + _obj.pCostOfAsset + "','" + _obj.pSaleValue + "', '" + _obj.pCGST + "', '" + _obj.pSGST + "', '" + _obj.pIGST + "', '" + _obj.pTotalSaleValue + "', '" + _obj.pDescriptionClaimedDate + "', '" + _obj.pwdvCarryingValue + "', '" + _obj.pProfitLoss + "', '" + _obj.pDescriptionClaimedDateForIncomeTax + "','" + _obj.pwdvCarryingValueForIncomeTax + "','" + _obj.pProfitLossForIncomeTax + "',1, '" + _obj.pcreatedby + "',current_timestamp" + ");"
+        //                );
+        //            sbinsert.Append("update tabassetseriesdetails set status = 'sale'  where mainassetcode = '" + _obj.pMainAssetCode + "' and assetcode = '" + _obj.pAssetCode + "'; ");
+        //        }
+        //        if (!string.IsNullOrEmpty(sbinsert.ToString()))
+        //        {
+        //            NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+        //        }
+        //        trans.Commit();
+        //        isSaved = true;
+        //    }
+        //    catch (Exception Ex)
+        //    {
+        //        throw Ex;
+        //        trans.Rollback();
+        //        isSaved = false;
+        //    }
+        //    return isSaved;
+
+        //}
+
+        public List<AssetsSeriesDTO> GetAssetsSeries(string connectionString, string Mainassetcode)
+        {
+            List<AssetsSeriesDTO> Assetsseries = new List<AssetsSeriesDTO>();
+            try
+            {
+
+                //string Query = "SELECT a.assetcode,a.nameoftheasset,b.wdvrate_companiesact_pctg from tabassetseriesdetails a left join tblmstassetcodes b on a.mainassetcode=b.assetcode where mainassetcode='"+ Mainassetcode + "'";
+
+                string Query = "SELECT a.assetcode,a.nameoftheasset,b.slmrate_companiesact_pctg from tabassetseriesdetails a left join tblmstassetcodes b on a.mainassetcode=b.assetcode where mainassetcode='" + Mainassetcode + "' and a.assetcode not in(select assetcode from tabsaleofassets)";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsSeriesDTO obj = new AssetsSeriesDTO();
+                        obj.pAssetcode = Convert.ToString(dr["assetcode"]);
+                        obj.pNameoftheasset = Convert.ToString(dr["nameoftheasset"]);
+                        obj.pslmratecompaniesactpctg = Convert.ToDecimal(dr["slmrate_companiesact_pctg"]);
+
+                        Assetsseries.Add(obj);
+
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            return Assetsseries;
+        }
+        public List<AssetsSeriesDTO> GetAssetsTransferSeries(string connectionString, string Mainassetcode)
+        {
+            List<AssetsSeriesDTO> Assetsseries = new List<AssetsSeriesDTO>();
+            try
+            {
+
+                //string Query = "SELECT a.assetcode,a.nameoftheasset,b.wdvrate_companiesact_pctg from tabassetseriesdetails a left join tblmstassetcodes b on a.mainassetcode=b.assetcode where mainassetcode='"+ Mainassetcode + "'";
+
+                string Query = "SELECT a.assetcode,a.nameoftheasset,b.slmrate_companiesact_pctg from tabassetseriesdetails a left join tblmstassetcodes b on a.mainassetcode=b.assetcode where mainassetcode='" + Mainassetcode + "' and a.assetcode not in(select assetcode from tabtransferofassetdetails)";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsSeriesDTO obj = new AssetsSeriesDTO();
+                        obj.pAssetcode = Convert.ToString(dr["assetcode"]);
+                        obj.pNameoftheasset = Convert.ToString(dr["nameoftheasset"]);
+                        obj.pslmratecompaniesactpctg = Convert.ToDecimal(dr["slmrate_companiesact_pctg"]);
+
+                        Assetsseries.Add(obj);
+
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            return Assetsseries;
+        }
+        public List<AssetssaleReportDTO> GetAssetssaleReport(string connectionString, string fromdate, string todate)
+        {
+            List<AssetssaleReportDTO> Assetssalereport = new List<AssetssaleReportDTO>();
+            try
+            {
+
+
+
+                string Query = "select * from fn_far_report('" + FormatDate(fromdate) + "','" + FormatDate(todate) + "');";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetssaleReportDTO obj = new AssetssaleReportDTO();
+                        obj.precordid = dr["record_id"] == DBNull.Value ? 0 : Convert.ToInt64(dr["record_id"]);
+                        obj.passetcode = dr["assetcodev"] == DBNull.Value ? "" : Convert.ToString(dr["assetcodev"]);
+                        obj.pfinancialyear = dr["finacialyear"] == DBNull.Value ? "" : Convert.ToString(dr["finacialyear"]);
+                        obj.pnameofasset = dr["assetname"] == DBNull.Value ? "" : Convert.ToString(dr["assetname"]);
+                        obj.popenvalueofgrossblock = dr["openvalueof_grossblock"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["openvalueof_grossblock"]);
+                        obj.pvalueofadditionpurchase = dr["valueof_addition_purchase"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["valueof_addition_purchase"]);
+                        obj.pdeletionsalevalue = dr["deletionsalevalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["deletionsalevalue"]);
+                        obj.pclosingvalueofgrossblock = dr["closingvalueof_grossblock"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["closingvalueof_grossblock"]);
+                        obj.puptopreviousyear = dr["upto_previous_year"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["upto_previous_year"]);
+                        obj.psalewrittenback = dr["sale_written_back"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["sale_written_back"]);
+                        obj.pfortheyear = dr["forthe_year"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["forthe_year"]);
+                        obj.puptocurrentfinancialyear = dr["uptocurrent_financialyear"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["uptocurrent_financialyear"]);
+                        obj.pclosingvalue = dr["closing_value"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["closing_value"]);
+                        Assetssalereport.Add(obj);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return Assetssalereport;
+        }
+
+
+        public List<AssetsSeriesDTO> GetAssetsSeriesDepreciationAmount(string connectionString, string mainassetcode, string assetcode, string fromdate)
+        {
+            List<AssetsSeriesDTO> Assetsseriesamount = new List<AssetsSeriesDTO>();
+            try
+            {
+
+
+
+                string Query = "select * from fn_assetwise_sumofvalue('" + mainassetcode + "','" + assetcode + "','" + fromdate + "')";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsSeriesDTO obj = new AssetsSeriesDTO();
+                        obj.pDepreciationClaimedDate = dr["fn_assetwise_sumofvalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["fn_assetwise_sumofvalue"]);
+                        Assetsseriesamount.Add(obj);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return Assetsseriesamount;
+        }
+
+
+        public List<AssetsSeriesDTO> GetAssetsSeriesDepreciationAmountIncomeTax(string connectionString, string mainassetcode, string assetcode, string fromdate)
+        {
+            List<AssetsSeriesDTO> Assetsseriesamount = new List<AssetsSeriesDTO>();
+            try
+            {
+                string Query = "select * from fn_assetwise_sumofvalue_incometax('" + mainassetcode + "','" + assetcode + "','" + fromdate + "')";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        Assetsseriesamount.Add(new AssetsSeriesDTO
+                        {
+                            pDescriptionClaimedDateForIncomeTax = dr["fn_assetwise_sumofvalue_incometax"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["fn_assetwise_sumofvalue_incometax"])
+                        });
+                    }
+                }
+            }
+            catch (Exception) { throw; }
+            return Assetsseriesamount;
+        }
+
+        public AssetsSeriesDTO GetAssetsSeriesAmount(string connectionString, string mainassetcode, string assetcode)
+        {
+            {
+                AssetsSeriesDTO Assetsseriesamount = new AssetsSeriesDTO();
+                try
+                {
+
+                    string Query = "select amount from tabassetseriesdetails where mainassetcode  ='" + mainassetcode + "'  and assetcode='" + assetcode + "' ";
+
+
+
+                    using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                    {
+                        while (dr.Read())
+                        {
+                            Assetsseriesamount.pAssatamount = dr["amount"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["amount"]);
+
+
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+
+                    throw;
+                }
+
+                return Assetsseriesamount;
+            }
+        }
+
+        public bool Savefarreportforfinancialyear(string Con, FarreporstFinalcialyearDTO _obj)
+        {
+            bool isSaved = false;
+            StringBuilder sbinsert = new StringBuilder();
+            NpgsqlTransaction trans = null;
+            int i;
+            Int64 recordid;
+            string Fromdate;
+
+            con = new NpgsqlConnection(Con);
+            if (con.State != ConnectionState.Open)
+            {
+                con.Open();
+            }
+            trans = con.BeginTransaction();
+            try
+            {
+
+                if (_obj.pforcompanyact != null) {
+                    string query = "select count(vchfinyear) from tabfarcompanyact where vchfinyear='" + _obj.pforcompanyact[0].pfinancialyear + "'";
+                    int count = Convert.ToInt32(NPGSqlHelper.ExecuteScalar(Con, CommandType.Text, query));
+                    if (count >= 0)
+                    {
+                        for (i = 0; i < _obj.pforcompanyact.Count; i++)
+                        {
+                            sbinsert.Append("select fn_insertassetwise_far_report('" + _obj.pforcompanyact[i].pnameofasset + "','" + _obj.pforcompanyact[i].passetcode + "','" + _obj.pforcompanyact[i].pfinancialyear + "'," + _obj.pforcompanyact[i].popenvalueofgrossblock + "," + _obj.pforcompanyact[i].pvalueofadditionpurchase + "," + _obj.pforcompanyact[i].pdeletionsalevalue + "," + _obj.pforcompanyact[i].pclosingvalueofgrossblock + "," + _obj.pforcompanyact[i].puptopreviousyear + "," + _obj.pforcompanyact[i].psalewrittenback + "," + _obj.pforcompanyact[i].pfortheyear + "," + _obj.pforcompanyact[i].puptocurrentfinancialyear + "," + _obj.pforcompanyact[i].pclosingvalue + "," + _obj.pforcompanyact[i].createdby + ");");
+                        }
+                    }
+                }
+                else
+                {
+
+
+                    string query1 = "select count(finacialyear) from tabwdvincometaxact where finacialyear='" + _obj.pincomtax[0].pfinacialyear + "'";
+                    int count1 = Convert.ToInt32(NPGSqlHelper.ExecuteScalar(Con, CommandType.Text, query1));
+
+                    if (count1 >= 0)
+                    {
+                        _obj.pincomtax = GetIncometaxreport(Con, _obj.pincomtax[0].pfinacialyear);
+
+
+                        for (int j = 0; j < _obj.pincomtax.Count; j++)
+                        {
+                            sbinsert.Append("select fn_insertassetwise_Incometaxwdv_far_report1('" + _obj.pincomtax[j].pfinacialyear + "','" + _obj.pincomtax[j].passetcode + "','" + _obj.pincomtax[j].passetname + "'," + _obj.pincomtax[j].popenvalueofgrossblock + "," + _obj.pincomtax[j].ppurchasebefore30sep + "," + _obj.pincomtax[j].ppurchaseafter30sep + "," + _obj.pincomtax[j].psalebefore30sep + "," + _obj.pincomtax[j].psaleafter30sep + "," + _obj.pincomtax[j].ptotal + "," + _obj.pincomtax[j].pdeponsalebefore30sep + "," + _obj.pincomtax[j].pdeponsaleafter30sep + "," + _obj.pincomtax[j].ptotaldepfortheyear + "," + _obj.pincomtax[j].pclosingvalue + "," + _obj.pincomtax[0].pcreatedby + ");");
+
+                        }
+
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(sbinsert.ToString()))
+                {
+                    NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+                }
+                trans.Commit();
+                isSaved = true;
+
+
+            }
+             catch (Exception Ex)
+            {
+                throw Ex;
+                trans.Rollback();
+                isSaved = false;
+            }
+            return isSaved;
+
+        }
+
+        //public bool saveIncometaxreport(string connectionsring, FarreporstFinalcialyearDTO _obj)
+        //{
+
+        //    bool isSaved = false;
+        //    StringBuilder sbinsert = new StringBuilder();
+        //    NpgsqlTransaction trans = null;
+        //    int i;
+
+        //    con = new NpgsqlConnection(connectionsring);
+        //    if (con.State != ConnectionState.Open)
+        //    {
+        //        con.Open();
+        //    }
+        //    trans = con.BeginTransaction();
+        //    try
+        //    {
+
+
+        //        string query = "select count(finacialyear) from tabwdvincometaxact where finacialyear='" + _obj.pforcompanyact[0].pfinancialyear  + "'";
+        //        int count = Convert.ToInt32(NPGSqlHelper.ExecuteScalar(connectionsring, CommandType.Text, query));
+
+        //        if (count <= 0)
+        //        {
+        //            _obj.pincomtax = GetIncometaxreport(connectionsring, _obj.pforcompanyact[0].pfinancialyear);
+
+
+        //            for (int j = 0; j < _obj.pincomtax.Count; j++)
+        //            {
+        //                sbinsert.Append("select fn_insertassetwise_Incometaxwdv_far_report(" + _obj.pincomtax[j].precordid + ",'" + _obj.pincomtax[j].pfinacialyear + "','" + _obj.pincomtax[j].passetcode + "','" + _obj.pincomtax[j].passetname + "'," + _obj.pincomtax[j].popenvalueofgrossblock + "," + _obj.pincomtax[j].ppurchasebefore30sep + "," + _obj.pincomtax[j].ppurchaseafter30sep + "," + _obj.pincomtax[j].psalebefore30sep + "," + _obj.pincomtax[j].psaleafter30sep + "," + _obj.pincomtax[j].ptotal + "," + _obj.pincomtax[j].pdeponsalebefore30sep + "," + _obj.pincomtax[j].pdeponsaleafter30sep + "," + _obj.pincomtax[j].ptotaldepfortheyear + "," + _obj.pincomtax[j].pclosingvalue + "," + _obj.pforcompanyact[0].createdby + ");");
+
+        //            }
+
+        //        }
+
+
+
+
+
+
+        //        if (!string.IsNullOrEmpty(sbinsert.ToString()))
+        //        {
+        //            NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+        //        }
+        //        trans.Commit();
+        //        isSaved = true;
+
+
+        //    }
+        //    catch (Exception Ex)
+        //    {
+        //        throw Ex;
+        //        trans.Rollback();
+        //        isSaved = false;
+        //    }
+        //    return isSaved;
+
+        //}
+        public financialyearcount GetFinanceyearscount(string connectionString, string financialyear)
+        {
+            financialyearcount financialyearcount = new financialyearcount();
+            try
+            {
+
+
+
+                string Query = "select count(vchfinyear) as count from tabfarcompanyact where vchfinyear='" + financialyear + "'";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+
+                        financialyearcount.count = dr["count"] == DBNull.Value ? 0 : Convert.ToInt32(dr["count"]);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return financialyearcount;
+        }
+
+
+        public financialyearcount GetFinanceyearcountIncome(string connectionString, string finacialyear)
+        {
+            financialyearcount financialyearcount = new financialyearcount();
+            try
+            {
+
+
+
+                string Query = "select count(finacialyear) as count from tabwdvincometaxact where finacialyear='" + finacialyear + "'";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+
+                        financialyearcount.count = dr["count"] == DBNull.Value ? 0 : Convert.ToInt32(dr["count"]);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return financialyearcount;
+        }
+        public List<DocumenttypeDTO> GetDocumenttypes(string connectionString)
+
+        {
+            List<DocumenttypeDTO> Documenttype = new List<DocumenttypeDTO>();
+
+            try
+            {
+                string Query = "select documentid,documenttypename from tblmstdocumenttypes where  statusid=1";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        DocumenttypeDTO obj = new DocumenttypeDTO();
+
+                        obj.pdocumentid = dr["documentid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["documentid"]);
+                        obj.pdocumenttype = dr["documenttypename"] == DBNull.Value ? "" : Convert.ToString(dr["documenttypename"]);
+                        Documenttype.Add(obj);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return Documenttype;
+        }
+
+        public List<AssetssaleDTO> ViewAssetssale(string connectionString)
+        {
+            List<AssetssaleDTO> Assetssale = new List<AssetssaleDTO>();
+
+            try
+            {
+                string Query = "select saleid,dateofsale, mainassetcode, assetcode,assetname,subclassificationofasset, originalcostofasset, soldto, gstin, pan,branchname, salevalue, cgst, sgst, igst, totalsalevalue, depreciation_claimed_tilldate,company_wdv_carrying_value_sale,company_wdv_profit_loss_onsale,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_sale,incometax_wdv_profit_loss_onsale, createdby from tabsaleofassets order by  saleid desc";
+                //string Query = "select saleid,dateofsale,soldto,gstin,pan,branchname from tabsaleofassets where statusid=1 order by saleid desc";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetssaleDTO obj = new AssetssaleDTO();
+
+                        obj.psaleid = dr["saleid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["saleid"]);
+                        obj.pDateofSale = dr["dateofsale"] != DBNull.Value ? Convert.ToDateTime(dr["dateofsale"]).ToString("yyyy/MM/dd") : "";
+                        obj.pMainAssetCode = dr["mainassetcode"] == DBNull.Value ? "" : Convert.ToString(dr["mainassetcode"]);
+                        obj.pAssetCode = dr["assetcode"] == DBNull.Value ? "" : Convert.ToString(dr["assetcode"]);
+                        obj.natureofasset = dr["assetname"] == DBNull.Value ? "" : Convert.ToString(dr["assetname"]);
+                        obj.psubclassificationofasset = dr["subclassificationofasset"] == DBNull.Value ? "" : Convert.ToString(dr["subclassificationofasset"]);
+                        obj.pCostOfAsset = dr["originalcostofasset"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["originalcostofasset"]);
+                        obj.pSoldTo = dr["soldto"] == DBNull.Value ? "" : Convert.ToString(dr["soldto"]);
+                        obj.pGSTIN = dr["gstin"] == DBNull.Value ? "" : Convert.ToString(dr["gstin"]);
+                        obj.pPAN = dr["pan"] == DBNull.Value ? "" : Convert.ToString(dr["pan"]);
+                        obj.pbranchname = dr["branchname"] == DBNull.Value ? "" : Convert.ToString(dr["branchname"]);
+                        obj.pSaleValue = dr["salevalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["salevalue"]);
+                        obj.pCGST = dr["cgst"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["cgst"]);
+                        obj.pSGST = dr["sgst"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["sgst"]);
+                        obj.pIGST = dr["igst"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["igst"]);
+                        obj.pTotalSaleValue = dr["totalsalevalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["totalsalevalue"]);
+                        obj.pDescriptionClaimedDate = dr["depreciation_claimed_tilldate"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["depreciation_claimed_tilldate"]);
+                        obj.pwdvCarryingValue = dr["company_wdv_carrying_value_sale"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["company_wdv_carrying_value_sale"]);
+                        obj.pProfitLoss = dr["company_wdv_profit_loss_onsale"] == DBNull.Value ? "" : Convert.ToString(dr["company_wdv_profit_loss_onsale"]);
+                        obj.pDescriptionClaimedDateForIncomeTax = dr["incomtax_wdv_depreciation_claimed_tilldate"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["incomtax_wdv_depreciation_claimed_tilldate"]);
+                        obj.pwdvCarryingValueForIncomeTax = dr["incometax_wdv_carrying_value_sale"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["incometax_wdv_carrying_value_sale"]);
+                        obj.pProfitLossForIncomeTax = dr["incometax_wdv_profit_loss_onsale"] == DBNull.Value ? "" : Convert.ToString(dr["incometax_wdv_profit_loss_onsale"]);
+                        obj.pcreatedby = dr["createdby"] == DBNull.Value ? 0 : Convert.ToInt64(dr["createdby"]);
+                        obj.AssetssaleDetailslist = GetSaledatails(connectionString, obj.psaleid);
+
+                        Assetssale.Add(obj);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return Assetssale;
+        }
+
+        public List<AssetssaleDetailsDTO> GetSaledatails(string connectionString, Int64 saleid)
+        {
+            List<AssetssaleDetailsDTO> Assetssaledetails = new List<AssetssaleDetailsDTO>();
+
+            try
+            {
+                //string Query = "select saleid,dateofsale, mainassetcode, assetcode,assetname,subclassificationofasset, originalcostofasset, soldto, gstin, pan, salevalue, cgst, sgst, igst, totalsalevalue, depreciation_claimed_tilldate,company_wdv_carrying_value_sale,company_wdv_profit_loss_onsale,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_sale,incometax_wdv_profit_loss_onsale, createdby from tabsaleofassets order by recordid";
+                string Query = "select  saleid,dateofsale,mainassetcode, assetcode,assetname,subclassificationofasset, originalcostofasset, salevalue, cgst, sgst, igst, totalsalevalue, depreciation_claimed_tilldate,company_wdv_carrying_value_sale,company_wdv_profit_loss_onsale,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_sale,incometax_wdv_profit_loss_onsale from tabsaleofassets where statusid=1 order by saleid";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetssaleDetailsDTO obj = new AssetssaleDetailsDTO();
+
+                        //  obj.psaledetailsid = dr["saledetailsid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["saledetailsid"]);
+                        obj.psaleid = dr["saleid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["saleid"]);
+                        obj.pDateofSale = dr["dateofsale"] != DBNull.Value ? Convert.ToDateTime(dr["dateofsale"]).ToString("yyyy/MM/dd") : "";
+                        obj.pMainAssetCode = dr["mainassetcode"] == DBNull.Value ? "" : Convert.ToString(dr["mainassetcode"]);
+                        obj.pAssetCode = dr["assetcode"] == DBNull.Value ? "" : Convert.ToString(dr["assetcode"]);
+                        obj.natureofasset = dr["assetname"] == DBNull.Value ? "" : Convert.ToString(dr["assetname"]);
+                        obj.psubclassificationofasset = dr["subclassificationofasset"] == DBNull.Value ? "" : Convert.ToString(dr["subclassificationofasset"]);
+                        obj.pCostOfAsset = dr["originalcostofasset"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["originalcostofasset"]);
+                        //obj.pSoldTo = dr["soldto"] == DBNull.Value ? "" : Convert.ToString(dr["soldto"]);
+                        //obj.pGSTIN = dr["gstin"] == DBNull.Value ? "" : Convert.ToString(dr["gstin"]);
+                        //obj.pPAN = dr["pan"] == DBNull.Value ? "" : Convert.ToString(dr["pan"]);
+                        obj.pSaleValue = dr["salevalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["salevalue"]);
+
+                        obj.pCGST = dr["cgst"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["cgst"]);
+                        obj.pSGST = dr["sgst"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["sgst"]);
+                        obj.pIGST = dr["igst"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["igst"]);
+                        obj.pTotalSaleValue = dr["totalsalevalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["totalsalevalue"]);
+                        obj.pDescriptionClaimedDate = dr["depreciation_claimed_tilldate"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["depreciation_claimed_tilldate"]);
+                        obj.pwdvCarryingValue = dr["company_wdv_carrying_value_sale"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["company_wdv_carrying_value_sale"]);
+                        obj.pProfitLoss = dr["company_wdv_profit_loss_onsale"] == DBNull.Value ? "" : Convert.ToString(dr["company_wdv_profit_loss_onsale"]);
+                        obj.pDescriptionClaimedDateForIncomeTax = dr["incomtax_wdv_depreciation_claimed_tilldate"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["incomtax_wdv_depreciation_claimed_tilldate"]);
+                        obj.pwdvCarryingValueForIncomeTax = dr["incometax_wdv_carrying_value_sale"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["incometax_wdv_carrying_value_sale"]);
+                        obj.pProfitLossForIncomeTax = dr["incometax_wdv_profit_loss_onsale"] == DBNull.Value ? "" : Convert.ToString(dr["incometax_wdv_profit_loss_onsale"]);
+
+                        Assetssaledetails.Add(obj);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return Assetssaledetails;
+        }
+
+        public AssetsSeriesDTO GetAssetsInvoicedate(string connectionString, string mainassetcode, string assetcode)
+        {
+            AssetsSeriesDTO AssetsInvoicedate = new AssetsSeriesDTO();
+
+            try
+            {
+                string Query = "select invoicedate from tabassetseriesdetails where mainassetcode ='" + mainassetcode + "' and assetcode ='" + assetcode + "'";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsInvoicedate.pinvoicedate = dr["invoicedate"] != DBNull.Value ? Convert.ToDateTime(dr["invoicedate"]).ToString("yyyy/MM/dd") : "";
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return AssetsInvoicedate;
+        }
+
+
+
+        public List<IncometaxreportDTO> GetIncometaxreport(string connectionstring, string financialyear)
+
+        {
+            List<IncometaxreportDTO> incometaxreports = new List<IncometaxreportDTO>();
+            try
+            {
+                string query = "select * from fn_far_wdvincomtax_report_('" + financialyear + "')";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionstring, CommandType.Text, query))
+                {
+                    while (dr.Read())
+                    {
+                        IncometaxreportDTO obj = new IncometaxreportDTO();
+                        obj.precordid = dr["record_id"] == DBNull.Value ? 0 : Convert.ToInt64(dr["record_id"]);
+                        obj.pfinacialyear = dr["finacialyear"] == DBNull.Value ? "" : Convert.ToString(dr["finacialyear"]);
+                        obj.passetcode = dr["assetcodev"] == DBNull.Value ? "" : Convert.ToString(dr["assetcodev"]);
+                        obj.passetname = dr["assetname"] == DBNull.Value ? "" : Convert.ToString(dr["assetname"]);
+                        obj.popenvalueofgrossblock = dr["open_value"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["open_value"]);
+                        obj.ppurchasebefore30sep = dr["purchase_before_30sep"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["purchase_before_30sep"]);
+                        obj.ppurchaseafter30sep = dr["purchase_after_30sep"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["purchase_after_30sep"]);
+                        obj.psalebefore30sep = dr["sale_before_30sep"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["sale_before_30sep"]);
+                        obj.psaleafter30sep = dr["sale_after_30sep"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["sale_after_30sep"]);
+                        obj.ptotal = dr["total"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["total"]);
+                        obj.pdeponsalebefore30sep = dr["depon_sale_before_30sep"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["depon_sale_before_30sep"]);
+                        obj.pdeponsaleafter30sep = dr["depon_sale_after_30sep"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["depon_sale_after_30sep"]);
+                        obj.ptotaldepfortheyear = dr["totaldep_forthe_year"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["totaldep_forthe_year"]);
+                        obj.pclosingvalue = dr["closing_value"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["closing_value"]);
+
+                        incometaxreports.Add(obj);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            return incometaxreports;
+        }
+
+
+        public List<VehicleReportDTO> GetVehicleReport(string connectionString, string fromdate, string todate)
+
+        {
+            List<VehicleReportDTO> Vehiclereport = new List<VehicleReportDTO>();
+            try
+            {
+
+
+
+                string Query = "select * from fn_far_vehicle_report1('" + FormatDate(fromdate) + "','" + FormatDate(todate) + "');";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+
+
+                        VehicleReportDTO obj = new VehicleReportDTO();
+                        obj.precordid = dr["record_id"] == DBNull.Value ? 0 : Convert.ToInt64(dr["record_id"]);
+                        obj.passetcode = dr["mainassetcodes"] == DBNull.Value ? "" : Convert.ToString(dr["mainassetcodes"]);
+                        obj.pfinancialyear = dr["finacialyear"] == DBNull.Value ? "" : Convert.ToString(dr["finacialyear"]);
+                        obj.pnameofasset = dr["nameofasset"] == DBNull.Value ? "" : Convert.ToString(dr["nameofasset"]);
+                        obj.pbrandofasset = dr["brandofasset"] == DBNull.Value ? "" : Convert.ToString(dr["brandofasset"]);
+                        obj.pinvoicedate = dr["invoicedate1"] == DBNull.Value ? "" : Convert.ToString(dr["invoicedate1"]);
+
+                        obj.popenvalueofgrossblock = dr["openvalueof_grossblock"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["openvalueof_grossblock"]);
+                        obj.pvalueofadditionpurchase = dr["valueof_addition_purchase"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["valueof_addition_purchase"]);
+                        obj.pdeletionsalevalue = dr["deletionsalevalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["deletionsalevalue"]);
+                        obj.pclosingvalueofgrossblock = dr["closingvalueof_grossblock"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["closingvalueof_grossblock"]);
+                        obj.puptopreviousyear = dr["upto_previous_year"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["upto_previous_year"]);
+                        obj.psalewrittenback = dr["sale_written_back"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["sale_written_back"]);
+                        obj.pfortheyear = dr["forthe_year"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["forthe_year"]);
+                        obj.puptocurrentfinancialyear = dr["uptocurrent_financialyear"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["uptocurrent_financialyear"]);
+                        obj.pclosingvalue = dr["closing_value"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["closing_value"]);
+
+                        obj.pchassisno = dr["chassisno1"] == DBNull.Value ? "" : Convert.ToString(dr["chassisno1"]);
+                        obj.pengineno = dr["engineno1"] == DBNull.Value ? "" : Convert.ToString(dr["engineno1"]);
+                        obj.pvehicleassignedto = dr["vehicleassignedto1"] == DBNull.Value ? "" : Convert.ToString(dr["vehicleassignedto1"]);
+                        obj.pmodelno = dr["modelno1"] == DBNull.Value ? "" : Convert.ToString(dr["modelno1"]);
+                        obj.pvehiclercno = dr["vehiclercno1"] == DBNull.Value ? "" : Convert.ToString(dr["vehiclercno1"]);
+                        obj.pfueltype = dr["fueltype1"] == DBNull.Value ? "" : Convert.ToString(dr["fueltype1"]);
+                        obj.pvehicleregno = dr["vehicleregno1"] == DBNull.Value ? "" : Convert.ToString(dr["vehicleregno1"]);
+                        obj.ploaction = dr["loaction1"] == DBNull.Value ? "" : Convert.ToString(dr["loaction1"]);
+                        obj.pdepartment = dr["department1"] == DBNull.Value ? "" : Convert.ToString(dr["department1"]);
+                        obj.passetcodes = dr["assetcode1"] == DBNull.Value ? "" : Convert.ToString(dr["assetcode1"]);
+
+                        obj.pdicrease_estimatedlife = dr["dicrease_estimatedlife"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["dicrease_estimatedlife"]);
+                        obj.pestimatedlifeof_asset = dr["estimatedlifeof_asset"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["estimatedlifeof_asset"]);
+                        obj.presudualsvalue = dr["resudualsvalue1"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["resudualsvalue1"]);
+                        obj.pwdvscarringvalue = dr["wdvscarringvalue1"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["wdvscarringvalue1"]);
+
+                        Vehiclereport.Add(obj);
+
+
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return Vehiclereport;
+        }
+
+        public bool SaveVehicleReport(string Con, listVehicleReportDTO _obj)
+
+        {
+            bool isSaved = false;
+            StringBuilder sbinsert = new StringBuilder();
+            NpgsqlTransaction trans = null;
+            int i;
+            Int64 recordid;
+            string Fromdate;
+
+            con = new NpgsqlConnection(Con);
+            if (con.State != ConnectionState.Open)
+            {
+                con.Open();
+            }
+            trans = con.BeginTransaction();
+            try
+            {
+
+
+                string query = "select count(vchfinyear) from tabwdvvehicle_report1 where vchfinyear='" + _obj.pForVehicleReport[0].pfinancialyear + "'";
+                int count = Convert.ToInt32(NPGSqlHelper.ExecuteScalar(Con, CommandType.Text, query));
+                if (count <= 0)
+                {
+                    for (i = 0; i < _obj.pForVehicleReport.Count; i++)
+                    {
+                        // numsale, depsale, numgrossblock, uptopreviousyer, numdepopening, numdepforyear, numdepuptocurryr, closingvalue, assetcode, chassisno, engineno, vehicleassignedto, modelno, vehiclercno, fueltype, vehicleregno, loaction, department, dicrease_estimatedlife, estimatedlifeof_asset, resudualsvalue, wdvscarringvalue, createdby, createddate
+
+
+                        sbinsert.Append("INSERT INTO tabwdvvehicle_report1(datailsid, vchfinyear, mainassetcode,vchassetname,brandofasset,invoicedate, numopengross, numpurchase, numsale,depsale,numdepopening,numgrossblock, numdepforyear, numdepuptocurryr,closingvalue, chassisno, engineno, vehicleassignedto, modelno,vehiclercno, fueltype, vehicleregno, loaction, department,  dicrease_estimatedlife, estimatedlifeof_asset, resudualsvalue, wdvscarringvalue, assetcode,createdby, createddate) VALUES(" + _obj.pForVehicleReport[i].precordid + ",'" + _obj.pForVehicleReport[i].pfinancialyear + "','" + _obj.pForVehicleReport[i].passetcode + "','" + _obj.pForVehicleReport[i].pnameofasset + "','" + _obj.pForVehicleReport[i].pbrandofasset + "','" + _obj.pForVehicleReport[i].pinvoicedate + "'," + _obj.pForVehicleReport[i].popenvalueofgrossblock + "," + _obj.pForVehicleReport[i].pvalueofadditionpurchase + "," + _obj.pForVehicleReport[i].pdeletionsalevalue + "," + _obj.pForVehicleReport[i].psalewrittenback + "," + _obj.pForVehicleReport[i].puptopreviousyear + "," + _obj.pForVehicleReport[i].pclosingvalueofgrossblock + "," + _obj.pForVehicleReport[i].pfortheyear + "," + _obj.pForVehicleReport[i].puptocurrentfinancialyear + "," + _obj.pForVehicleReport[i].pclosingvalue + ",'" + _obj.pForVehicleReport[i].pchassisno + "','" + _obj.pForVehicleReport[i].pengineno + "','" + _obj.pForVehicleReport[i].pvehicleassignedto + "','" + _obj.pForVehicleReport[i].pmodelno + "','" + _obj.pForVehicleReport[i].pvehiclercno + "','" + _obj.pForVehicleReport[i].pfueltype + "','" + _obj.pForVehicleReport[i].pvehicleregno + "','" + _obj.pForVehicleReport[i].ploaction + "','" + _obj.pForVehicleReport[i].pdepartment + "'," + _obj.pForVehicleReport[i].pdicrease_estimatedlife + "," + _obj.pForVehicleReport[i].pestimatedlifeof_asset + "," + _obj.pForVehicleReport[i].presudualsvalue + " ," + _obj.pForVehicleReport[i].pwdvscarringvalue + ",'" + _obj.pForVehicleReport[i].passetcodes + "',14,current_timestamp);");
+
+
+                    }
+
+
+
+                }
+
+
+
+
+                if (!string.IsNullOrEmpty(sbinsert.ToString()))
+                {
+                    NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+                }
+                trans.Commit();
+                isSaved = true;
+
+
+            }
+            catch (Exception Ex)
+            {
+                throw Ex;
+                trans.Rollback();
+                isSaved = false;
+            }
+            return isSaved;
+
+        }
+
+        public List<VehicleReportDTO> GetVehicleReportdetails(string connectionString)
+
+        {
+            List<VehicleReportDTO> Vehiclereport = new List<VehicleReportDTO>();
+            try
+            {
+
+
+
+                string Query = "select * from tabwdvvehicle_report1";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+
+                        //datailsid, vchfinyear, mainassetcode,vchassetname,brandofasset,invoicedate, numopengross, numpurchase, numsale,depsale,numdepopening,numgrossblock, numdepforyear, numdepuptocurryr,closingvalue, chassisno, engineno, vehicleassignedto, modelno,vehiclercno, fueltype, vehicleregno, loaction, department,  dicrease_estimatedlife, estimatedlifeof_asset, resudualsvalue, wdvscarringvalue, assetcode,createdby
+                        VehicleReportDTO obj = new VehicleReportDTO();
+                        obj.precordid = dr["recordid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["recordid"]);
+                        obj.pdetailsid = dr["datailsid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["datailsid"]);
+                        obj.passetcode = dr["mainassetcode"] == DBNull.Value ? "" : Convert.ToString(dr["mainassetcode"]);
+                        obj.pfinancialyear = dr["vchfinyear"] == DBNull.Value ? "" : Convert.ToString(dr["vchfinyear"]);
+                        obj.pnameofasset = dr["vchassetname"] == DBNull.Value ? "" : Convert.ToString(dr["vchassetname"]);
+                        obj.pbrandofasset = dr["brandofasset"] == DBNull.Value ? "" : Convert.ToString(dr["brandofasset"]);
+                        obj.pinvoicedate = dr["invoicedate"] == DBNull.Value ? "" : Convert.ToString(dr["invoicedate"]);
+                        obj.popenvalueofgrossblock = dr["numopengross"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["numopengross"]);
+
+                        obj.pvalueofadditionpurchase = dr["numpurchase"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["numpurchase"]);
+                        obj.psalevalue = dr["numsale"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["numsale"]);
+                        //obj.pdepreciationvalue  = dr["numdepopening"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["numdepopening"]);
+                        obj.pclosingvalueofgrossblock = dr["numgrossblock"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["numgrossblock"]);
+                        obj.puptopreviousyear = dr["uptopreviousyer"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["uptopreviousyer"]);
+                        obj.pfortheyear = dr["numdepforyear"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["numdepforyear"]);
+                        obj.puptocurrentfinancialyear = dr["numdepuptocurryr"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["numdepuptocurryr"]);
+                        obj.pclosingvalue = dr["closingvalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["closingvalue"]);
+
+                        obj.pchassisno = dr["chassisno"] == DBNull.Value ? "" : Convert.ToString(dr["chassisno"]);
+                        obj.pengineno = dr["engineno"] == DBNull.Value ? "" : Convert.ToString(dr["engineno"]);
+                        obj.pvehicleassignedto = dr["vehicleassignedto"] == DBNull.Value ? "" : Convert.ToString(dr["vehicleassignedto"]);
+                        obj.pmodelno = dr["modelno"] == DBNull.Value ? "" : Convert.ToString(dr["modelno"]);
+                        obj.pvehiclercno = dr["vehiclercno"] == DBNull.Value ? "" : Convert.ToString(dr["vehiclercno"]);
+
+                        obj.pfueltype = dr["fueltype"] == DBNull.Value ? "" : Convert.ToString(dr["fueltype"]);
+                        obj.pvehicleregno = dr["vehicleregno"] == DBNull.Value ? "" : Convert.ToString(dr["vehicleregno"]);
+                        obj.ploaction = dr["loaction"] == DBNull.Value ? "" : Convert.ToString(dr["loaction"]);
+                        obj.pdepartment = dr["department"] == DBNull.Value ? "" : Convert.ToString(dr["department"]);
+                        obj.passetcodes = dr["assetcode"] == DBNull.Value ? "" : Convert.ToString(dr["assetcode"]);
+
+                        obj.pdicrease_estimatedlife = dr["dicrease_estimatedlife"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["dicrease_estimatedlife"]);
+                        obj.pestimatedlifeof_asset = dr["estimatedlifeof_asset"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["estimatedlifeof_asset"]);
+                        obj.presudualsvalue = dr["resudualsvalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["resudualsvalue"]);
+                        obj.pwdvscarringvalue = dr["wdvscarringvalue"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["wdvscarringvalue"]);
+
+                        Vehiclereport.Add(obj);
+
+
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return Vehiclereport;
+        }
+
+        public financialyearcount GetFinanceyearsvehiclecount(string connectionString, string financialyear)
+        {
+            financialyearcount financialyearcount = new financialyearcount();
+            try
+            {
+
+
+
+                string Query = "select count(vchfinyear) as count from tabwdvvehicle_report1 where vchfinyear='" + financialyear + "'";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+
+                        financialyearcount.count = dr["count"] == DBNull.Value ? 0 : Convert.ToInt32(dr["count"]);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+
+            return financialyearcount;
+        }
+
+        //public bool SaveAssetsTransfer(string Con, AssetsTransferDTO _obj)
+        //{
+        //    bool isSaved = false;
+        //    StringBuilder sbinsert = new StringBuilder();
+        //    NpgsqlTransaction trans = null;
+        //    long transferid = 0;
+
+        //    con = new NpgsqlConnection(Con);
+        //    if (con.State != ConnectionState.Open)
+        //    {
+        //        con.Open();
+        //    }
+        //    trans = con.BeginTransaction();
+
+        //    try
+        //    {
+        //        // Insert main transfer record
+        //        if (_obj.ptypeofoperation.ToUpper() == "CREATE")
+        //        {
+        //            transferid = Convert.ToInt64(NPGSqlHelper.ExecuteScalar(
+        //                trans, CommandType.Text,
+        //                "INSERT INTO tabtransferofassets(dateoftransfer,mainassetcode,assetname,subclassificationofasset,branchname,existingholder,tolcation,todepartment,newholder,transferauthorizedby,depreciation_claimed_tilldate,company_wdv_carrying_value_transfer,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_transfer,statusid,createdby,createddate) " +
+        //                "VALUES('" + FormatDate(_obj.pdateoftransfer) + "','" + _obj.pmainassetcode + "','" + _obj.passetname + "','" + _obj.psubclassificationofasset + "','" + _obj.pbranchname + "','" + _obj.pexistingholder + "','" + _obj.ptolcation + "','" + _obj.ptodepartment + "','" + _obj.pnewholder + "','" + _obj.ptransferauthorizedby + "'," + _obj.pdepreciationclaimedtilldate + "," + _obj.pcompanywdvcarryingvaluetransfer + "," + _obj.pincomtaxwdvdepreciationclaimedtilldate + "," + _obj.pincometaxwdvcarryingvaluetransfer + ",1," + _obj.pcreatedby + ",current_timestamp) returning transferid;"
+        //            ));
+        //        }
+
+        //        // Loop through transfer details
+        //        foreach (var detail in _obj.TransferDatsilsList)
+        //        {
+        //            // Loop through each passetcode
+        //            foreach (var codeObj in detail.passetcode)
+        //            {
+        //                sbinsert.Append("INSERT INTO tabtransferofassetdetails(" +
+        //                    "transferid,dateoftransfer,mainassetcode,assetcode,assetname,subclassificationofasset,branchname,depreciation_claimed_tilldate,company_wdv_carrying_value_transfer,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_transfer,statusid,createdby,createddate) " +
+        //                    "VALUES(" + transferid + ",'" + FormatDate(_obj.pdateoftransfer) + "','" + detail.pmainassetcode + "','" + codeObj.pAssetcode + "','" + detail.passetname + "','" + detail.psubclassificationofasset + "','" + _obj.pbranchname + "'," + detail.pdepreciationclaimedtilldate + "," + detail.pcompanywdvcarryingvaluetransfer + "," + detail.pincomtaxwdvdepreciationclaimedtilldate + "," + detail.pincometaxwdvcarryingvaluetransfer + ",1," + _obj.pcreatedby + ",current_timestamp);");
+
+        //                sbinsert.Append("UPDATE tabassetseriesdetails SET status='transfer', modifiedby=" + detail.pmodifyedby + ", modifieddate=current_timestamp " +
+        //                    "WHERE mainassetcode='" + detail.pmainassetcode + "' AND assetcode='" + codeObj.pAssetcode + "';");
+        //            }
+        //        }
+
+        //        if (!string.IsNullOrEmpty(sbinsert.ToString()))
+        //        {
+        //            NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+        //        }
+
+        //        trans.Commit();
+        //        isSaved = true;
+        //    }
+        //    catch (Exception Ex)
+        //    {
+        //        trans.Rollback();
+        //        isSaved = false;
+        //        throw Ex;
+        //    }
+
+        //    return isSaved;
+        //}
+
+        public bool SaveAssetsTransfer(string Con, AssetsTransferDTO _obj)
+        {
+            bool isSaved = false;
+            StringBuilder sbinsert = new StringBuilder();
+            NpgsqlTransaction trans = null;
+            long transferid = 0;
+
+            con = new NpgsqlConnection(Con);
+            if (con.State != ConnectionState.Open)
+            {
+                con.Open();
+            }
+            trans = con.BeginTransaction();
+
+            try
+            {
+                // Insert main transfer record
+                if (_obj.ptypeofoperation.ToUpper() == "CREATE")
+                {
+                    transferid = Convert.ToInt64(NPGSqlHelper.ExecuteScalar(
+                        trans, CommandType.Text,
+                        "INSERT INTO tabtransferofassets(dateoftransfer,mainassetcode,assetname,subclassificationofasset,branchname,existingholder,tolcation,todepartment,newholder,transferauthorizedby,depreciation_claimed_tilldate,company_wdv_carrying_value_transfer,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_transfer,statusid,createdby,createddate) " +
+                        "VALUES('" + FormatDate(_obj.pdateoftransfer) + "','" + _obj.pmainassetcode + "','" + _obj.passetname + "','" + _obj.psubclassificationofasset + "','" + _obj.pbranchname + "','" + _obj.pexistingholder + "','" + _obj.ptolcation + "','" + _obj.ptodepartment + "','" + _obj.pnewholder + "','" + _obj.ptransferauthorizedby + "'," + _obj.pdepreciationclaimedtilldate + "," + _obj.pcompanywdvcarryingvaluetransfer + "," + _obj.pincomtaxwdvdepreciationclaimedtilldate + "," + _obj.pincometaxwdvcarryingvaluetransfer + ",1," + _obj.pcreatedby + ",current_timestamp) returning transferid;"
+                    ));
+                }
+
+                if (_obj.TransferDatsilsList != null)
+                {
+                    foreach (var detail in _obj.TransferDatsilsList)
+                    {
+                        if (detail.passetcode != null)
+                        {
+                            foreach (var codeObj in detail.passetcode)
+                            {
+                               
+                                sbinsert.Append("INSERT INTO tabtransferofassetdetails(transferid,dateoftransfer,mainassetcode,assetcode,assetname,subclassificationofasset,branchname,depreciation_claimed_tilldate,company_wdv_carrying_value_transfer,incomtax_wdv_depreciation_claimed_tilldate,incometax_wdv_carrying_value_transfer,statusid,createdby,createddate) VALUES(" + transferid + ",'" + FormatDate(_obj.pdateoftransfer) + "','" + detail.pmainassetcode + "','" + codeObj.pAssetcode + "','" + detail.passetname + "','" + detail.psubclassificationofasset + "','" + _obj.pbranchname + "'," + detail.pdepreciationclaimedtilldate + "," + detail.pcompanywdvcarryingvaluetransfer + "," + detail.pincomtaxwdvdepreciationclaimedtilldate + "," + detail.pincometaxwdvcarryingvaluetransfer + ",1," + _obj.pcreatedby + ",current_timestamp);");
+
+                                sbinsert.Append("UPDATE tabassetseriesdetails SET status='transfer', modifiedby=" + _obj.pcreatedby + ", modifieddate=current_timestamp " +
+                                    "WHERE mainassetcode='" + detail.pmainassetcode + "' AND assetcode='" + codeObj.pAssetcode + "';");
+                            }
+                        }
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(sbinsert.ToString()))
+                {
+                    NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+                }
+
+                trans.Commit();
+                isSaved = true;
+            }
+            catch (Exception Ex)
+            {
+                trans.Rollback();
+                isSaved = false;
+                throw Ex;
+            }
+
+            return isSaved;
+        }
+
+        public List<AssetsTransferDTO> ViewAssetsTransfer(string connectionString)
+        {
+            List<AssetsTransferDTO> Assetstransfer = new List<AssetsTransferDTO>();
+
+            try
+            {
+                string Query = "SELECT transferid, dateoftransfer, mainassetcode, assetname, subclassificationofasset, existingholder, tolcation, todepartment, newholder, transferauthorizedby, branchname FROM tabtransferofassets WHERE statusid=1 ORDER BY transferid DESC";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsTransferDTO obj = new AssetsTransferDTO
+                        {
+                            ptransferid = dr["transferid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["transferid"]),
+                            pdateoftransfer = dr["dateoftransfer"] != DBNull.Value ? Convert.ToDateTime(dr["dateoftransfer"]).ToString("yyyy-MM-dd") : "",
+                            pmainassetcode = dr["mainassetcode"] == DBNull.Value ? "" : dr["mainassetcode"].ToString(),
+                            passetname = dr["assetname"] == DBNull.Value ? "" : dr["assetname"].ToString(),
+                            psubclassificationofasset = dr["subclassificationofasset"] == DBNull.Value ? "" : dr["subclassificationofasset"].ToString(),
+                            pexistingholder = dr["existingholder"] == DBNull.Value ? "" : dr["existingholder"].ToString(),
+                            ptolcation = dr["tolcation"] == DBNull.Value ? "" : dr["tolcation"].ToString(),
+                            ptodepartment = dr["todepartment"] == DBNull.Value ? "" : dr["todepartment"].ToString(),
+                            pnewholder = dr["newholder"] == DBNull.Value ? "" : dr["newholder"].ToString(),
+                            ptransferauthorizedby = dr["transferauthorizedby"] == DBNull.Value ? "" : dr["transferauthorizedby"].ToString(),
+                            pbranchname = dr["branchname"] == DBNull.Value ? "" : dr["branchname"].ToString(),
+                            
+                            TransferDatsilsList = Gettransferdetails(connectionString, dr["transferid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["transferid"]))
+                        };
+
+                        Assetstransfer.Add(obj);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return Assetstransfer;
+        }
+        public List<AssetsTransferDatsilsDTO> Gettransferdetails(string connectionString, Int64 ptransferid)
+        {
+            List<AssetsTransferDatsilsDTO> Assetstransferdetails = new List<AssetsTransferDatsilsDTO>();
+
+            try
+            {
+                //string Query = "SELECT transferid, mainassetcode, assetcode, assetname, subclassificationofasset, depreciation_claimed_tilldate AS pdepreciionclaimedtilldateat, company_wdv_carrying_value_transfer, incomtax_wdv_depreciation_claimed_tilldate, incometax_wdv_carrying_value_transfer, createdby, modifiedby, createddate, modifieddate " +
+                //               "FROM tabtransferofassetdetails WHERE transferid=" + ptransferid + " ORDER BY transferdetailsid";
+
+
+                string Query = " SELECT  d.transferid,d.mainassetcode,d.assetcode,d.assetname,d.subclassificationofasset,d.depreciation_claimed_tilldate AS pdepreciionclaimedtilldateat,a.company_wdv_carrying_value_transfer AS pcompanywdvcarryingvaluetransfer,d.incomtax_wdv_depreciation_claimed_tilldate,d.incometax_wdv_carrying_value_transfer,d.createdby,d.modifiedby,d.createddate,d.modifieddate FROM tabtransferofassetdetails d INNER JOIN tabtransferofassets a ON a.transferid = d.transferid WHERE d.transferid = " + ptransferid + "ORDER BY d.transferdetailsid";
+
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsTransferDatsilsDTO obj = new AssetsTransferDatsilsDTO
+                        {
+                            ptransferid = dr["transferid"] == DBNull.Value ? 0 : Convert.ToInt64(dr["transferid"]),
+                            pmainassetcode = dr["mainassetcode"] == DBNull.Value ? "" : dr["mainassetcode"].ToString(),
+                            passetcode = new List<AssetCodeDTO>(),  // Initialize empty list
+                            passetname = dr["assetname"] == DBNull.Value ? "" : dr["assetname"].ToString(),
+                            psubclassificationofasset = dr["subclassificationofasset"] == DBNull.Value ? "" : dr["subclassificationofasset"].ToString(),
+                            pdepreciationclaimedtilldate = dr["pdepreciionclaimedtilldateat"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["pdepreciionclaimedtilldateat"]),
+                            //pcompanywdvcarryingvaluetransfer = dr["company_wdv_carrying_value_transfer"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["company_wdv_carrying_value_transfer"]),
+                            pcompanywdvcarryingvaluetransfer = dr["pcompanywdvcarryingvaluetransfer"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["pcompanywdvcarryingvaluetransfer"]),
+
+                            pincomtaxwdvdepreciationclaimedtilldate = dr["incomtax_wdv_depreciation_claimed_tilldate"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["incomtax_wdv_depreciation_claimed_tilldate"]),
+                            pincometaxwdvcarryingvaluetransfer = dr["incometax_wdv_carrying_value_transfer"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["incometax_wdv_carrying_value_transfer"]),
+                            pcreatedby = dr["createdby"] == DBNull.Value ? 0 : Convert.ToInt64(dr["createdby"]),
+                            pmodifyedby = dr["modifiedby"] == DBNull.Value ? 0 : Convert.ToInt64(dr["modifiedby"]),
+                            pcreateddate = dr["createddate"] == DBNull.Value ? "" : Convert.ToDateTime(dr["createddate"]).ToString("yyyy-MM-dd"),
+                            pmodifyedddate = dr["modifieddate"] == DBNull.Value ? "" : Convert.ToDateTime(dr["modifieddate"]).ToString("yyyy-MM-dd")
+                        };
+
+                        // Add assetcode string inside AssetCodeDTO list
+                        string assetcodeString = dr["assetcode"] == DBNull.Value ? "" : dr["assetcode"].ToString();
+                        if (!string.IsNullOrEmpty(assetcodeString))
+                        {
+                            obj.passetcode.Add(new AssetCodeDTO { pAssetcode = assetcodeString });
+                        }
+
+                        Assetstransferdetails.Add(obj);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return Assetstransferdetails;
+        }
+
+
+        public List<AssetsInvoiceDTO> GetAssetsInvoiceno(string connectionString)
+        {
+            List<AssetsInvoiceDTO> AssetsInvoice = new List<AssetsInvoiceDTO>();
+            try
+            {
+
+                string Query = "select recordid,invoice_number from tabassetsinfo  where isvehicle = true order by invoice_number ";
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsInvoiceDTO obj = new AssetsInvoiceDTO();
+                        obj.precordid = Convert.ToInt64(dr["recordid"]);
+                        obj.pinvoiceno = Convert.ToString(dr["invoice_number"]);
+
+                        AssetsInvoice.Add(obj);
+
+                    }
+                }
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            return AssetsInvoice;
+        }
+
+
+
+
+        public List<AssetsInvoiceDetailsDTO> GetAssetsInvoicedetails(string connectionString, string invoiceno)
+        {
+            List<AssetsInvoiceDetailsDTO> AssetsInvoice = new List<AssetsInvoiceDetailsDTO>();
+            try
+            {
+
+
+                string Query = @"SELECT transaction_date, invoice_date, a.invoice_number, vendor_name, a.custodyat,branchname,chassisno, a.createdby,a.insurancefrom,a.insuranceto,a.amcenddate,a.warrantyfrom,a.warrantyto, vehicleassignedto, modelno, fueltype, vehicleregno,loaction, department, vehiclercno, asset_name, asset_brand, quantity, rate,cgst_percentage, sgst_percentage, igst_percentage, cess_percentage, tcs_percentage, b.installationcost, vehicle_type, b.freight, b.engineno, c.narration FROM tabassetsinfo a JOIN tabassetsinvoiceinfo b ON a.invoice_number = b.invoice_number JOIN tabassetstransactiondetails c ON a.invoice_number = c.invoiceno WHERE a.invoice_number='" + invoiceno + "' ";
+
+
+
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsInvoiceDetailsDTO obj = new AssetsInvoiceDetailsDTO();
+
+                        // obj.ptransaction_date = dr["transaction_date"]?.ToString();
+                        obj.ptransaction_date = dr["transaction_date"] == DBNull.Value ? null : Convert.ToDateTime(dr["transaction_date"]).ToString("dd/MM/yyyy");
+                        obj.pinvoice_date = dr["invoice_date"] == DBNull.Value ? null : Convert.ToDateTime(dr["invoice_date"]).ToString("dd/MM/yyyy");
+
+                        //obj.pinvoice_date = dr["invoice_date"]?.ToString();
+                        obj.pinvoice_number = dr["invoice_number"]?.ToString();
+                        obj.pvendor_name = dr["vendor_name"]?.ToString();
+                        //obj.pbranchname = dr["branchname"]?.ToString();
+                        obj.pchassisno = dr["chassisno"]?.ToString();
+                        obj.pengineno = dr["engineno"]?.ToString();
+                        obj.pvehicleassignedto = dr["vehicleassignedto"]?.ToString();
+                        obj.pmodelno = dr["modelno"]?.ToString();
+                        obj.pfueltype = dr["fueltype"]?.ToString();
+                        obj.pvehicleregno = dr["vehicleregno"]?.ToString();
+                        obj.ploaction = dr["loaction"]?.ToString();
+                        obj.pdepartment = dr["department"]?.ToString();
+                        obj.pvehiclercno = dr["vehiclercno"]?.ToString();
+                        obj.passet_name = dr["asset_name"]?.ToString();
+                        obj.passet_brand = dr["asset_brand"]?.ToString();
+                        obj.pquantity = dr["quantity"] == DBNull.Value ? 0 : Convert.ToInt64(dr["quantity"]);
+                        obj.pfreight = dr["freight"] == DBNull.Value ? 0 : Convert.ToInt64(dr["freight"]);
+                        obj.prate = dr["rate"] == DBNull.Value ? 0 : Convert.ToInt64(dr["rate"]);
+                        obj.pcgst_percentage = dr["cgst_percentage"] == DBNull.Value ? 0 : Convert.ToInt64(dr["cgst_percentage"]);
+                        obj.psgst_percentage = dr["sgst_percentage"] == DBNull.Value ? 0 : Convert.ToInt64(dr["sgst_percentage"]);
+                        obj.pigst_percentage = dr["igst_percentage"] == DBNull.Value ? 0 : Convert.ToInt64(dr["igst_percentage"]);
+                        obj.pcess_percentage = dr["cess_percentage"] == DBNull.Value ? 0 : Convert.ToInt64(dr["cess_percentage"]);
+                        obj.ptcs_percentage = dr["tcs_percentage"] == DBNull.Value ? 0 : Convert.ToInt64(dr["tcs_percentage"]);
+                        obj.pinstallationcost = dr["installationcost"] == DBNull.Value ? 0 : Convert.ToInt64(dr["installationcost"]);
+                        obj.pcustodyat = dr["custodyat"]?.ToString();
+                        obj.pvehicle_type = dr["vehicle_type"]?.ToString();
+                        obj.createdby = dr["createdby"] == DBNull.Value ? 0 : Convert.ToInt64(dr["createdby"]);
+                        obj.pinsurancefrom = dr["insurancefrom"]?.ToString();
+                        obj.pinsuranceto = dr["insuranceto"]?.ToString();
+                        obj.pamcenddate = dr["amcenddate"]?.ToString();
+                        obj.pwarrantyfrom = dr["warrantyfrom"]?.ToString();
+                        obj.pwarrantyto = dr["warrantyto"]?.ToString();
+
+                        AssetsInvoice.Add(obj);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return AssetsInvoice;
+        }
+        public bool UpdateAssetinvoiceDetails(string Con, AssetsInvoiceDetailsDTO _obj)
+        {
+            bool isSaved = false;
+            NpgsqlTransaction trans = null;
+            StringBuilder sbinsert = new StringBuilder();
+
+            // Create connection and start transaction
+            con = new NpgsqlConnection(Con);
+            if (con.State != ConnectionState.Open)
+            {
+                con.Open();
+            }
+            trans = con.BeginTransaction();
+
+            try
+            {
+
+                sbinsert.Append(
+"UPDATE tabassetsinfo " +
+"SET custodyat = '" + _obj.pcustodyat + "',vendor_name='" + _obj.pvendor_name + "' " +
+"WHERE invoice_number = '" + _obj.pinvoice_number + "'; " +
+
+"UPDATE tabassetsinvoiceinfo " +
+
+"SET  chassisno = '" + _obj.pchassisno + "', " +
+"    asset_name = '" + _obj.passet_name + "', " +
+"    asset_brand = '" + _obj.passet_brand + "', " +
+"    quantity = '" + _obj.pquantity + "', " +
+"    rate = '" + _obj.prate + "', " +
+"    freight = '" + _obj.pfreight + "', " +
+"    installationcost = '" + _obj.pinstallationcost + "', " +
+"    vehicleassignedto = '" + _obj.pvehicleassignedto + "', " +
+"    engineno = '" + _obj.pengineno + "', " +
+"    modelno = '" + _obj.pmodelno + "', " +
+"    fueltype = '" + _obj.pfueltype + "', " +
+"    vehicleregno = '" + _obj.pvehicleregno + "', " +
+"    loaction = '" + _obj.ploaction + "', " +
+"    department = '" + _obj.pdepartment + "', " +
+"    vehiclercno = '" + _obj.pvehiclercno + "', " +
+"    custodyat = '" + _obj.pcustodyat + "' " +
+"WHERE invoice_number = '" + _obj.pinvoice_number + "'; " +
+
+"UPDATE tabassetstransactiondetails " +
+"SET custodyat = '" + _obj.pcustodyat + "' " +
+"WHERE invoiceno = '" + _obj.pinvoice_number + "';"
+);
+
+
+
+                // Execute the batch of queries in one go
+                if (!string.IsNullOrEmpty(sbinsert.ToString()))
+                {
+                    NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+                }
+
+                // Commit the transaction
+                trans.Commit();
+                isSaved = true;
+            }
+            catch (Exception Ex)
+            {
+                // Rollback transaction in case of an error
+                trans.Rollback();
+                throw Ex; // Re-throw the exception
+            }
+
+            return isSaved;
+        }
+
+        public bool updateassetsinfo(string Con, Assetsdto1 _obj)
+        {
+            bool isSaved = false;
+            StringBuilder sbupdate = new StringBuilder();
+            NpgsqlTransaction trans = null;
+            int i;
+
+            con = new NpgsqlConnection(Con);
+            if (con.State != ConnectionState.Open)
+            {
+                con.Open();
+            }
+
+            trans = con.BeginTransaction();
+
+            try
+            {
+                if (_obj.ptypeofoperation.Trim().ToUpper() == "UPDATE")
+                {
+
+                    sbupdate.Append(
+                        "UPDATE tabassetsinfo SET " +
+                        "invoice_date = '" + _obj.pinvoice_date + "', " +
+                        "vendor_name = '" + _obj.pvendor_name + "', " +
+                        "freight = " + _obj.pfreight + ", " +
+                        "installationcost = " + _obj.pinstallationcost + ", " +
+                        "modifiedby = '" + _obj.pmodifiedby + "', " +
+                        "modifieddate = current_timestamp, " +
+                        "grandtotal = " + _obj.pgrandtotal + ", " +
+                        "custodyat = '" + _obj.pcustodyat + "', " +
+       "insurancefrom = " + (!string.IsNullOrEmpty(_obj.pinsurancefrom) ? $"'{_obj.pinsurancefrom}'" : "NULL") + ", " +
+                    //  obj.pmainassetcode = dr["mainassetcode"] == DBNull.Value ? "" : Convert.ToString(dr["mainassetcode"]);
+                    "insuranceto = " + (!string.IsNullOrEmpty(_obj.pinsuranceto) ? $"'{_obj.pinsuranceto}'" : "NULL") + ", " +
+"warrantyfrom = " + (!string.IsNullOrEmpty(_obj.pwarrantyfrom) ? $"'{_obj.pwarrantyfrom}'" : "NULL") + ", " +
+"warrantyto = " + (!string.IsNullOrEmpty(_obj.pwarrantyto) ? $"'{_obj.pwarrantyto}'" : "NULL") + ", " +
+"amc = " + (!string.IsNullOrEmpty(_obj.pamc) ? $"'{_obj.pamc}'" : "NULL") + ", " +
+"amcenddate = " + (!string.IsNullOrEmpty(_obj.pamcenddate) ? $"'{_obj.pamcenddate}'" : "NULL") + " " +
+
+
+
+
+                     // "WHERE invoice_number = '" + pinvoice_number + "'; "
+                     "WHERE invoice_number = '" + _obj.pinvoice_number + "' ; "
+                    );
+
+
+                    for (i = 0; i < _obj.invoicelist.Count; i++)
+                    {
+                        var item = _obj.invoicelist[i];
+
+                        if (item.ptypeofoperation.Trim().ToUpper() == "UPDATE")
+                        {
+                            sbupdate.Append(
+                                "UPDATE tabassetsinvoiceinfo SET " +
+                                "asset_name = '" + item.passet_name + "', " +
+                                "asset_brand = '" + item.passet_brand + "', " +
+                                "quantity = " + item.pquantity + ", " +
+                                "rate = " + item.prate + ", " +
+                                "cgst_percentage = " + item.pcgst_percentage + ", " +
+                                "sgst_percentage = " + item.psgst_percentage + ", " +
+                                "igst_percentage = " + item.pigst_percentage + ", " +
+                                "cess_percentage = " + item.pcess_percentage + ", " +
+                                "tcs_percentage = " + item.ptcs_percentage + ", " +
+                                "freight = " + item.pfreight + ", " +
+                                "installationcost = " + item.pinstallationcost + ", " +
+                                "chassisno = '" + item.pchassisno + "', " +
+                                "engineno = '" + item.pengineno + "', " +
+                                "fueltype = '" + item.pfueltype + "', " +
+                                "vehicleRegNo = '" + item.pvehicleregno + "', " +
+                                "loaction = '" + item.ploaction + "', " +
+                                "department = '" + item.pdepartment + "', " +
+                                "vehiclercno = '" + item.pvehiclercno + "', " +
+                                "vehicle_type = '" + item.pvehicle_type + "', " +
+                                "custodyat = '" + item.pcustodyat + "', " +
+                                "modelno = '" + item.pmodelno + "', " +
+                                "modifiedby = '" + item.pmodifiedby + "', " +
+                                "modifieddate = current_timestamp, " +
+                                "cgstvalue = " + item.pcgstvalue + ", " +
+                                "sgstvalue = " + item.psgstvalue + ", " +
+                                "igstvalue = " + item.pigstvalue + ", " +
+                                "cesstvalue = " + item.pcesstvalue + ", " +
+                                "tcsvalue = " + item.ptcsvalue + " " +
+                                 //"WHERE invoice_number = '" + pinvoice_number + "'; "
+                                 "WHERE invoice_number = '" + _obj.pinvoice_number + "' ; "
+                            );
+                        }
+                    }
+
+
+                    for (i = 0; i < _obj.assetstransactions.Count; i++)
+                    {
+                        var item = _obj.assetstransactions[i];
+
+                        sbupdate.Append(
+                            "UPDATE tabassetstransactionDetails SET " +
+                            "narration = '" + item.pnarration + "', " +
+                            "particulars = '" + item.pparticulars + "', " +
+                            "branchname = '" + item.pbranchname + "', " +
+                            "modifiedby = '" + item.pmodifiedby + "', " +
+                            "invoiceamount = " + _obj.pgrandtotal + ", " +
+                            "modifieddate = current_timestamp, " +
+                            "custodyat = '" + item.pcustodyat + "' " +
+                             //"WHERE invoiceno = '" + pinvoice_number + "'; "
+                             "WHERE invoiceno = '" + _obj.pinvoice_number + "' ; "
+                        );
+                    }
+
+                    NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbupdate.ToString());
+                    trans.Commit();
+                    isSaved = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                trans.Rollback();
+                isSaved = false;
+                throw;
+            }
+
+            return isSaved;
+        }
+        public List<VechileBranchDTO> GetAssetsInvoicedetailsReportBranch(string connectionString)
+        {
+            List<VechileBranchDTO> branchList = new List<VechileBranchDTO>();
+            try
+            {
+
+                string query = " select distinct branchname from tabassetstransactiondetails a join tabassetsinfo b on a.invoiceno= b.invoice_number where isvehicle =true  and branchname != '' or branchname = null";
+
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, query))
+                {
+                    while (dr.Read())
+                    {
+                        VechileBranchDTO obj = new VechileBranchDTO
+                        {
+                            pbranchname = dr["branchname"]?.ToString()
+                        };
+
+                        branchList.Add(obj);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return branchList;
+        }
+
+
+        public List<AssetsInvoiceDetailsDTO> GetAssetsInvoicedetailsReport(string connectionString, string branch)
+        {
+            List<AssetsInvoiceDetailsDTO> AssetsInvoice = new List<AssetsInvoiceDetailsDTO>();
+
+            try
+            {
+                string strQuery = string.Empty;
+                if (branch == "ALL")
+                {
+                    strQuery = "SELECT  a.invoice_number,  a.vendor_name, a.custodyat, b.asset_name, b.asset_brand, c.branchname,b.rate, b.department,b.loaction,b.chassisno,  b.engineno,b.modelno,b.fueltype,b.vehicleregno,b.vehiclercno,b.vehicle_type    FROM tabassetsinfo a LEFT JOIN tabassetsinvoiceinfo b ON a.invoice_number = b.invoice_number LEFT JOIN tabassetstransactiondetails c ON a.invoice_number = c.invoiceno WHERE a.isvehicle = 't' AND (a.custodyat IS NOT NULL AND a.custodyat != '');";
+                }
+                else
+                {
+                    strQuery = "SELECT  a.invoice_number,  a.vendor_name, a.custodyat, b.asset_name, b.asset_brand, c.branchname,b.rate, b.department,b.loaction,b.chassisno,  b.engineno,b.modelno,b.fueltype,b.vehicleregno,b.vehiclercno,b.vehicle_type    FROM tabassetsinfo a LEFT JOIN tabassetsinvoiceinfo b ON a.invoice_number = b.invoice_number LEFT JOIN tabassetstransactiondetails c ON a.invoice_number = c.invoiceno WHERE a.isvehicle = 't' AND (a.custodyat IS NOT NULL AND a.custodyat != '' AND  c.branchname='" + branch + "') ;";
+                }
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, strQuery))
+                {
+                    while (dr.Read())
+                    {
+                        AssetsInvoiceDetailsDTO obj = new AssetsInvoiceDetailsDTO();
+                        obj.pinvoice_number = dr["invoice_number"]?.ToString();
+                        obj.pvendor_name = dr["vendor_name"]?.ToString();
+                        obj.pcustodyat = dr["custodyat"]?.ToString();
+                        obj.passet_name = dr["asset_name"]?.ToString();
+                        obj.passet_brand = dr["asset_brand"]?.ToString();
+                        obj.pbranchname = dr["branchname"]?.ToString();
+                        obj.prate = dr["rate"] == DBNull.Value ? 0 : Convert.ToDecimal(dr["rate"]);
+                        obj.pdepartment = dr["department"]?.ToString();
+                        obj.ploaction = dr["loaction"]?.ToString();
+                        obj.pchassisno = dr["chassisno"]?.ToString();
+                        obj.pengineno = dr["engineno"]?.ToString();
+                        obj.pmodelno = dr["modelno"]?.ToString();
+                        obj.pfueltype = dr["fueltype"]?.ToString();
+                        obj.pvehicleregno = dr["vehicleregno"]?.ToString();
+                        obj.pvehiclercno = dr["vehiclercno"]?.ToString();
+                        obj.pvehicle_type = dr["vehicle_type"]?.ToString();
+                        AssetsInvoice.Add(obj);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return AssetsInvoice;
+        }
+        public List<LaptopInfoDTO> GetlaptopdetailsReport(string connectionString)
+        {
+            List<LaptopInfoDTO> laptopdetails = new List<LaptopInfoDTO>();
+
+            try
+            {
+                string Query = @" SELECT company_name,branch,custody_at,designation,serial_no,purchased_date,laptop_brand
+                            FROM tab_laptop_info";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+
+                    while (dr.Read())
+                    {
+                        LaptopInfoDTO obj = new LaptopInfoDTO();
+
+                        obj.company_name = dr["company_name"]?.ToString();
+                        obj.branch_name = dr["branch"]?.ToString();
+                        obj.custodyat = dr["custody_at"]?.ToString();
+                        obj.designation = dr["designation"]?.ToString();
+                        obj.serial_no = dr["serial_no"]?.ToString();
+                        obj.purchaseddate = dr["purchased_date"]?.ToString();
+                        obj.laptop_brand = dr["laptop_brand"]?.ToString();
+
+
+                        laptopdetails.Add(obj);
+
+                    }
+                }
+            }
+
+
+
+
+
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return laptopdetails;
+        }
+        public bool SaveLaptopInfo(string Con, LaptopInfoDTO _obj)
+        {
+            bool isSaved = false;
+            StringBuilder sbinsert = new StringBuilder();
+            NpgsqlTransaction trans = null;
+
+            con = new NpgsqlConnection(Con);
+            if (con.State != ConnectionState.Open)
+            {
+                con.Open();
+            }
+
+            trans = con.BeginTransaction();
+
+            try
+            {
+                if (_obj.ptypeofoperation.Trim().ToUpper() == "CREATE")
+                {
+                    sbinsert.Append("INSERT INTO tab_laptop_info (" +
+                                  "company_name, branch, custody_at, designation, serial_no, purchased_date, laptop_brand, " +
+                                  "created_by, created_date, status" +
+                                  ") VALUES (" + "'" + _obj.company_name + "'," + "'" + _obj.branch_name + "'," + "'" + _obj.custodyat + "'," + "'" + _obj.designation + "'," + "'" + _obj.serial_no + "'," + "'" + FormatDate(_obj.purchaseddate) + "'," + "'" + _obj.laptop_brand + "'," + _obj.created_by + "," + "CURRENT_TIMESTAMP," + "TRUE" + ");"
+
+
+                    );
+
+                    NPGSqlHelper.ExecuteNonQuery(trans, CommandType.Text, sbinsert.ToString());
+                    trans.Commit();
+                    isSaved = true;
+                }
+            }
+            catch (Exception Ex)
+            {
+                trans.Rollback();
+                throw Ex;
+            }
+
+            return isSaved;
+        }
+        public List<CompanyDTO> getcompany(string branchname, string connectionString)
+
+        {
+            NpgsqlConnection con = new NpgsqlConnection(connectionString);
+            List<CompanyDTO> obj = new List<CompanyDTO>();
+
+            string Query;
+            try
+            {
+                con.Open();
+                if (branchname.ToUpper() == "BRANCH-ADMIN")
+                {
+                    Query = "select branchname,connectionstring,branchschema from tabschemalogin";
+                }
+                else
+                {
+                    Query = "select branchname,connectionstring,branchschema from tabschemalogin where branchname='" + branchname + "';";
+                }
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        CompanyDTO ComDTO = new CompanyDTO();
+                        ComDTO.pBranchname = dr["branchname"].ToString();
+                        ComDTO.pConnectionstring = dr["connectionstring"].ToString();
+                        //userDTO.pBranchSchema = dr["branchschema"].ToString();
+                        ComDTO.pBranchSchema = dr["branchschema"] == DBNull.Value ? "" : Convert.ToString(dr["branchschema"]);
+
+                        // NpgsqlConnection conn = new NpgsqlConnection(userDTO.pConnectionstring);                                             
+                        ComDTO.ComList = getcompanydetails(ComDTO.pBranchSchema, ComDTO.pBranchname, ComDTO.pConnectionstring, connectionString);
+                        obj.Add(ComDTO);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+            finally
+            {
+                con.Close();
+                con.Dispose();
+            }
+ 
+
+
+
+            return obj;
+        }
+        public List<CompanydetailsDTO> getcompanydetails(string BranchSchema, string BranchName, string connectionString, string ConnectionString)
+
+        {
+            NpgsqlConnection con = new NpgsqlConnection(connectionString);
+            List<CompanydetailsDTO> comlist = new List<CompanydetailsDTO>();
+
+            string Query;
+            string globalschema = "GLOBAL";
+
+            try
+            {
+                con.Open();
+                if (BranchSchema == "GROUP")
+                {
+
+                    Query = "select vchcompanyname as nameofenterprise from tabcompany; ";
+
+                }
+                else if (BranchSchema == "REMO")
+                {
+
+                    Query = "select nameofenterprise from tblmstcompany; ";
+
+                }
+                //else if (BranchSchema == "OFFLINE")
+                //{
+
+                //    Query = "select vchcompanyname from tabcompany; ";
+
+                //}
+
+                else
+                {
+                    //Query = "SELECT company_name FROM "GLOBAL".tbl_mst_chit_company_configuration ; ";
+                    Query = "SELECT company_name as nameofenterprise FROM   " + AddDoubleQuotes(globalschema) + ".tbl_mst_chit_company_configuration  a join   " + AddDoubleQuotes(globalschema) + ".tbl_mst_branch_configuration b on  a.tbl_mst_chit_company_configuration_id=b.company_configuration_id where b.branch_code='" + BranchSchema + "'; ";
+
+                }
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        CompanydetailsDTO obj = new CompanydetailsDTO();
+                        obj.vchcompanyname = dr["nameofenterprise"] == DBNull.Value ? "" : Convert.ToString(dr["nameofenterprise"]);
+
+                        comlist.Add(obj);
+
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+            finally
+            {
+                con.Close();
+                con.Dispose();
+            }
+
+            return comlist;
+        }
+        public List<LaptopInfoDTO> getlaptopbrad(string connectionString)
+        {
+            List<LaptopInfoDTO> laptopbrand = new List<LaptopInfoDTO>();
+
+            try
+            {
+                string Query = @"select laptop_brand from tab_laptop_Brand";
+
+                using (NpgsqlDataReader dr = NPGSqlHelper.ExecuteReader(connectionString, CommandType.Text, Query))
+                {
+                    while (dr.Read())
+                    {
+                        LaptopInfoDTO obj = new LaptopInfoDTO();
+
+
+                        obj.laptop_brand = dr["laptop_brand"]?.ToString();
+
+                        laptopbrand.Add(obj);
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+
+            return laptopbrand;
+        }
+    }
+
+}
