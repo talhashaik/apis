@@ -1,0 +1,50 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using static KCF_Auctions_Infrastructure.LegalNotice.LegalNotice.FarReports;
+
+namespace KCF_Auctions_Repository.Interfaces.LegalNotice
+{
+    public interface IFarReports
+    {
+        public List<FinanceyearDTO> GetFinanceyears (string connectionString);
+        public bool SaveAssetssale(string Con, AssetssaleDTO _obj);
+        public List<AssetsSeriesDTO> GetAssetsSeries(string connectionString,string Mainassetcode);
+        List<AssetsSeriesDTO> GetAssetsTransferSeries(string connectionString, string Mainassetcode);
+
+        public List<AssetssaleReportDTO> GetAssetssaleReport(string connectionString, string fromdate, string todate);
+        public List<AssetsSeriesDTO> GetAssetsSeriesDepreciationAmount(string connectionString, string mainassetcode, string assetcode, string fromdate);
+        public List<AssetsSeriesDTO> GetAssetsSeriesDepreciationAmountIncomeTax(string connectionString, string mainassetcode, string assetcode, string fromdate);
+
+        public AssetsSeriesDTO GetAssetsSeriesAmount(string connectionString, string mainassetcode, string assetcode);
+
+        public bool Savefarreportforfinancialyear(string Con, FarreporstFinalcialyearDTO _obj);
+        public financialyearcount GetFinanceyearscount(string connectionString,string financialyear);
+        public financialyearcount GetFinanceyearcountIncome(string connectionString, string finacialyear);
+        public List<DocumenttypeDTO> GetDocumenttypes(string connectionString);
+        public List<AssetssaleDTO> ViewAssetssale(string connectionString);
+        public AssetsSeriesDTO GetAssetsInvoicedate(string connectionString, string mainassetcode, string assetcode);
+        public List<IncometaxreportDTO> GetIncometaxreport(string connectionsring, string financialyea);
+        //public bool saveIncometaxreport(string connectionsring, FarreporstFinalcialyearDTO incometaxreport);
+
+        public List<VehicleReportDTO> GetVehicleReport(string connectionString, string fromdate, string todate);
+        public bool SaveVehicleReport(string Con, listVehicleReportDTO _obj);
+        List<VehicleReportDTO> GetVehicleReportdetails(string connectionString);
+        financialyearcount GetFinanceyearsvehiclecount(string connectionString, string financialyear);
+        public bool SaveAssetsTransfer(string Con, AssetsTransferDTO _obj);
+        public List<AssetsTransferDTO> ViewAssetsTransfer(string connectionString);
+        public List<AssetsInvoiceDTO> GetAssetsInvoiceno(string connectionString);
+        public List<AssetsInvoiceDetailsDTO> GetAssetsInvoicedetails(string connectionString, string invoiceno);
+        public bool UpdateAssetinvoiceDetails(string Con, AssetsInvoiceDetailsDTO _obj);
+        bool updateassetsinfo(string con, Assetsdto1 obj);
+        public List<VechileBranchDTO> GetAssetsInvoicedetailsReportBranch(string connectionString);
+        public List<AssetsInvoiceDetailsDTO> GetAssetsInvoicedetailsReport(string connectionString, string branch);
+
+        public List<LaptopInfoDTO> GetlaptopdetailsReport(string connectionString);
+        public bool SaveLaptopInfo(string Con, LaptopInfoDTO _obj);
+        List<CompanyDTO> getcompany(string branchname, string connectionString);
+        public List<LaptopInfoDTO> getlaptopbrad(string connectionString);
+
+
+    }
+}
