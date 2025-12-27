@@ -1,0 +1,607 @@
+using KCF_Auctions_API.Common;
+using KCF_Auctions_API.Security.Hashing;
+using KCF_Auctions_Repository.DataAccess.LegalNotice;
+using KCF_Auctions_Repository.Interfaces.LegalNotice;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using static KCF_Auctions_Infrastructure.LegalNotice.LegalNotice.FarReports;
+
+namespace KCF_Auctions_API.Controllers.LegalNotice
+{
+    //[Authorize]
+    [ApiController]
+    [EnableCors("CorsPolicy")]
+    public class FarReportsController : ControllerBase
+    {
+        private readonly IPasswordHasher _passwordHasher;
+        IFarReports objFarReports = new FarReportsDAL();
+        private IFarReports _userService;
+
+        string GlobalSchema = string.Empty;
+
+        string Con = string.Empty;
+        static IConfiguration _iconfiguration;
+        private IHostingEnvironment _hostingEnvironment;
+        public FarReportsController(IConfiguration iconfiguration, IHostingEnvironment hostingEnvironment, IPasswordHasher passwordHasher)
+        {
+            _passwordHasher = passwordHasher;
+            _iconfiguration = iconfiguration;
+            _hostingEnvironment = hostingEnvironment;
+            Con = _iconfiguration.GetSection("ConnectionStrings").GetSection("Connection").Value;
+            GlobalSchema = _iconfiguration.GetSection("ConnectionStrings").GetSection("GlobalSchemeName").Value;
+
+        }
+        [Route("api/LegalNotice/GetFinanceyears")]
+        [HttpGet]
+        public IActionResult GetFinanceyears()
+        {
+            List<FinanceyearDTO> Financeyears = new List<FinanceyearDTO>();
+            try
+            {
+                Financeyears = objFarReports.GetFinanceyears(Con);
+                return Ok(Financeyears);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/SaveAssetssale")]
+        [HttpPost]
+        public bool SaveAssetssale(AssetssaleDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objFarReports.SaveAssetssale(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+        [Route("api/LegalNotice/GetAssetsSeries")]
+        [HttpGet]
+        public IActionResult GetAssetsSeries(string Mainassetcode)
+        {
+            List<AssetsSeriesDTO> Assetsseries = new List<AssetsSeriesDTO>();
+            try
+            {
+                Assetsseries = objFarReports.GetAssetsSeries(Con, Mainassetcode);
+                return Ok(Assetsseries);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        [Route("api/LegalNotice/GetAssetsTransferSeries")]
+        [HttpGet]
+        public IActionResult GetAssetsTransferSeries(string Mainassetcode)
+        {
+            List<AssetsSeriesDTO> Assetsseries = new List<AssetsSeriesDTO>();
+            try
+            {
+                Assetsseries = objFarReports.GetAssetsTransferSeries(Con, Mainassetcode);
+                return Ok(Assetsseries);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/GetAssetssaleReport")]
+        [HttpGet]
+        public IActionResult GetAssetssaleReport(string fromdate, string todate)
+        {
+            List<AssetssaleReportDTO> Assetssalereport = new List<AssetssaleReportDTO>();
+            try
+            {
+                Assetssalereport = objFarReports.GetAssetssaleReport(Con, fromdate,todate);
+                return Ok(Assetssalereport);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/GetAssetsSeriesDepreciationAmount")]
+        [HttpGet]
+        public IActionResult GetAssetsSeriesDepreciationAmount( string mainassetcode, string assetcode, string fromdate)
+        {
+            List<AssetsSeriesDTO> AssetsSeriesAmount = new List<AssetsSeriesDTO>();
+            try
+            {
+                AssetsSeriesAmount = objFarReports.GetAssetsSeriesDepreciationAmount(Con, mainassetcode, assetcode, fromdate);
+                return Ok(AssetsSeriesAmount);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        
+               [Route("api/LegalNotice/GetAssetsSeriesDepreciationAmountIncomeTax")]
+        [HttpGet]
+        public IActionResult GetAssetsSeriesDepreciationAmountIncomeTax(string mainassetcode, string assetcode, string fromdate)
+        {
+            List<AssetsSeriesDTO> AssetsSeriesAmount = new List<AssetsSeriesDTO>();
+            try
+            {
+                AssetsSeriesAmount = objFarReports.GetAssetsSeriesDepreciationAmountIncomeTax(Con, mainassetcode, assetcode, fromdate);
+                return Ok(AssetsSeriesAmount);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/GetAssetsSeriesAmount")]
+        [HttpGet]
+        public IActionResult GetAssetsSeriesAmount(string mainassetcode, string assetcode)
+        {
+            AssetsSeriesDTO AssetsSeriesAmount = new AssetsSeriesDTO();
+            try
+            {
+                AssetsSeriesAmount = objFarReports.GetAssetsSeriesAmount(Con, mainassetcode, assetcode);
+                return Ok(AssetsSeriesAmount);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/Savefarreportforfinancialyear")]
+        [HttpPost]
+        public bool Savefarreportforfinancialyear(FarreporstFinalcialyearDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objFarReports.Savefarreportforfinancialyear(Con, _obj);
+                //issaved = objFarReports.saveIncometaxreport(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+        [Route("api/LegalNotice/GetFinanceyearscount")]
+        [HttpGet]
+        public IActionResult  GetFinanceyearscount( string financialyear)
+
+        {
+            financialyearcount financialyearcount = new financialyearcount();
+            try
+            {
+                financialyearcount = objFarReports.GetFinanceyearscount(Con, financialyear);
+                return Ok(financialyearcount);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+
+        [Route("api/LegalNotice/GetFinanceyearcountIncome")]
+        [HttpGet]
+        public IActionResult GetFinanceyearcountIncome(string finacialyear)
+
+        {
+            financialyearcount financialyearcount = new financialyearcount();
+            try
+            {
+                financialyearcount = objFarReports.GetFinanceyearcountIncome(Con, finacialyear);
+                return Ok(financialyearcount);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        [Route("api/LegalNotice/GetDocumenttypes")]
+        [HttpGet]
+        public IActionResult GetDocumenttypes()
+        {
+
+            List<DocumenttypeDTO> Documenttype = new List<DocumenttypeDTO>();
+            try
+            {
+                Documenttype = objFarReports.GetDocumenttypes(Con);
+                return Ok(Documenttype);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/ViewAssetssale")]
+        [HttpGet]
+        public IActionResult ViewAssetssale()
+        {
+
+            List<AssetssaleDTO> Assetssale = new List<AssetssaleDTO>();
+            try
+            {
+                Assetssale = objFarReports.ViewAssetssale(Con);
+                return Ok(Assetssale);
+
+            }
+            catch (Exception)
+            {
+               
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/GetAssetsInvoicedate")]
+        [HttpGet]
+        public IActionResult GetAssetsInvoicedate( string mainassetcode, string assetcode)
+        {
+
+            AssetsSeriesDTO AssetsInvoicedate = new AssetsSeriesDTO();
+            try
+            {
+                AssetsInvoicedate = objFarReports.GetAssetsInvoicedate(Con, mainassetcode, assetcode);
+                return Ok(AssetsInvoicedate);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+      
+        [Route("api/LegalNotice/GetIncometaxreport")]
+        [HttpGet]
+        public IActionResult GetIncometaxreport(string financialyea)
+        {
+            List<IncometaxreportDTO> incometaxreport = new List<IncometaxreportDTO>();
+            try
+            {
+                incometaxreport = objFarReports.GetIncometaxreport(Con, financialyea);
+                return Ok(incometaxreport);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+        }
+
+        [Route("api/LegalNotice/GetVehicleReport")]
+        [HttpGet]
+        public IActionResult VehicleReport(string fromdate, string todate)
+        {
+            List<VehicleReportDTO> Vehiclereport = new List<VehicleReportDTO>();
+            try
+            {
+                Vehiclereport = objFarReports.GetVehicleReport(Con, fromdate, todate);
+                return Ok(Vehiclereport);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/SaveVehicleReport")]
+        [HttpPost]
+        public bool SaveVehicleReport(listVehicleReportDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objFarReports.SaveVehicleReport(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+        [Route("api/LegalNotice/GetVehicleReportdetails")]
+        [HttpGet]
+        public IActionResult GetVehicleReportdetails()
+        {
+            List<VehicleReportDTO> Vehiclereport = new List<VehicleReportDTO>();
+            try
+            {
+                Vehiclereport = objFarReports.GetVehicleReportdetails(Con);
+                return Ok(Vehiclereport);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/GetFinanceyearsvehiclecount")]
+        [HttpGet]
+        public IActionResult GetFinanceyearsvehiclecount(string financialyear)
+
+        {
+            financialyearcount financialyearcount = new financialyearcount();
+            try
+            {
+                financialyearcount = objFarReports.GetFinanceyearsvehiclecount(Con, financialyear);
+                return Ok(financialyearcount);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/SaveAssetsTransfer")]
+        [HttpPost]
+        public bool SaveAssetsTransfer(AssetsTransferDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objFarReports.SaveAssetsTransfer(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+        [Route("api/LegalNotice/ViewAssetsTransfer")]
+        [HttpGet]
+        public IActionResult ViewAssetsTransfer()
+        {
+
+            List<AssetsTransferDTO> Assetstransfer = new List<AssetsTransferDTO>();
+            try
+            {
+                Assetstransfer = objFarReports.ViewAssetsTransfer(Con);
+                return Ok(Assetstransfer);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/LegalNotice/GetAssetsInvoiceno")]
+        [HttpGet]
+        public IActionResult GetAssetsInvoiceno()
+        {
+            List<AssetsInvoiceDTO> AssetsInvoice = new List<AssetsInvoiceDTO>();
+            try
+            {
+                AssetsInvoice = objFarReports.GetAssetsInvoiceno(Con);
+                return Ok(AssetsInvoice);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        [Route("api/LegalNotice/GetAssetsInvoicedetails")]
+        [HttpGet]
+        public IActionResult GetAssetsInvoicedetails(string invoiceno)
+        {
+            List<AssetsInvoiceDetailsDTO> AssetsInvoicedetails = new List<AssetsInvoiceDetailsDTO>();
+            try
+            {
+                AssetsInvoicedetails = objFarReports.GetAssetsInvoicedetails(Con, invoiceno);
+                return Ok(AssetsInvoicedetails);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [HttpPost]
+
+        [Route("api/Settings/Users/UserAccess/UpdateAssetinvoiceDetails")]
+        public bool UpdateAssetinvoiceDetails(AssetsInvoiceDetailsDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objFarReports.UpdateAssetinvoiceDetails(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+        }
+
+        [Route("api/Settings/Users/UserAccess/updateassetsinfo")]
+        [HttpPost]
+        public bool updateassetsinfo([FromBody] Assetsdto1 _obj1)
+        {
+            bool issaved;
+            try
+            {
+                issaved = objFarReports.updateassetsinfo(Con, _obj1);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+            return issaved;
+        }
+
+        [Route("api/LegalNotice/GetAssetsInvoicedetailsReportsbranch")]
+        [HttpGet]
+        public IActionResult GetAssetsInvoicedetailsReportsbranch()
+        {
+            List<VechileBranchDTO> Assetsbranchdetails = new List<VechileBranchDTO>();
+            try
+            {
+                Assetsbranchdetails = objFarReports.GetAssetsInvoicedetailsReportBranch(Con);
+                return Ok(Assetsbranchdetails);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+
+        [Route("api/Settings/Users/UserAccess/SavelaptopInfo")]
+        [HttpPost]
+        public bool SavelaptopInfo(LaptopInfoDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objFarReports.SaveLaptopInfo(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+        [Route("api/LegalNotice/GetAssetsInvoicedetailsReports")]
+        [HttpGet]
+        public IActionResult GetAssetsInvoicedetailsReport(string branch)
+        {
+            List<AssetsInvoiceDetailsDTO> AssetsInvoicedetails = new List<AssetsInvoiceDetailsDTO>();
+            try
+            {
+                AssetsInvoicedetails = objFarReports.GetAssetsInvoicedetailsReport(Con, branch);
+                return Ok(AssetsInvoicedetails);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        [HttpGet("api/LegalNotice/Getlaptopdetails")]
+        public IActionResult GetlaptopDetailsReport()
+        {
+            List<LaptopInfoDTO> laptopdetails = new List<LaptopInfoDTO>();
+            try
+            {
+                laptopdetails = objFarReports.GetlaptopdetailsReport(Con);
+                return Ok(laptopdetails);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        [HttpGet]
+        [Route("api/LegalNotice/getcompany")]
+        public IActionResult getcompany(string branchname)
+        {
+            List<CompanyDTO> companyname = new List<CompanyDTO>();
+            try
+            {
+                companyname = objFarReports.getcompany(branchname, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(companyname);
+        }
+
+        [Route("api/LegalNotice/getlaptopbrand")]
+        [HttpGet]
+        public IActionResult getlaptopbrand()
+        {
+            List<LaptopInfoDTO> laptopbrand = new List<LaptopInfoDTO>();
+            try
+            {
+                laptopbrand = objFarReports.getlaptopbrad(Con);
+                return Ok(laptopbrand);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+    }
+}
