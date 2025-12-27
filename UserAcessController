@@ -1,0 +1,1175 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using KCF_Auctions_Infrastructure.Settings.Users;
+using KCF_Auctions_Repository.Interfaces.Settings.Users;
+using KCF_Auctions_API.Common;
+using KCF_Auctions_Repository.DataAccess.Settings.Users;
+using System.Net;
+using System.Net.Http;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using KCF_Auctions_API.Security.Hashing;
+using Microsoft.AspNetCore.Authorization;
+using System.Net.Http.Headers;
+
+namespace KCF_Auctions_API.Controllers.Settings.Users
+{
+    //[Authorize]
+    [ApiController]
+    [EnableCors("CorsPolicy")]
+    public class UserAccessController : ControllerBase
+    {
+        private readonly IPasswordHasher _passwordHasher;
+        IUserAccess objUserAccess = new UserAccessDAL();
+        List<ContactEmployeeDTO> lstContactEmployeeDTO { set; get; }
+        List<UserAccessDTO> lstUserAccessDTO { set; get; }
+        public UserRightsFunctionsDTO UserRightsFunctionsDTO { set; get; }
+        List<RoleDTO> lstRoleDTO { set; get; }
+        List<UserDTO> lstUserDTO { set; get; }
+
+        private IUserAccess _userService;
+        public object UserRightsDAL { get; private set; }
+        public UserRightsDTO UserRightsDTO { get; private set; }
+
+        string GlobalSchema = string.Empty;
+
+        string Con = string.Empty;
+        static IConfiguration _iconfiguration;
+        private IHostingEnvironment _hostingEnvironment;
+        public UserAccessController(IConfiguration iconfiguration, IHostingEnvironment hostingEnvironment, IPasswordHasher passwordHasher)
+        {
+            _passwordHasher = passwordHasher;
+            _iconfiguration = iconfiguration;
+            _hostingEnvironment = hostingEnvironment;
+            Con = _iconfiguration.GetSection("ConnectionStrings").GetSection("Connection").Value;
+            GlobalSchema = _iconfiguration.GetSection("ConnectionStrings").GetSection("GlobalSchemeName").Value;
+
+        }
+        /// <summary>
+        /// Get All Un Registered Employees (i.e Un Registered Users)
+        /// </summary>
+
+
+
+
+
+
+        /// <summary>
+        /// Check User Login
+        /// </summary>
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/checkUserLogin")]
+        public IActionResult checkUserLogin(string UserName, string Password)
+        {
+            UserAccessDTO user = new UserAccessDTO();
+            try
+            {
+                //user = objUserAccess.CheckUser(UserName, Password, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(user);
+        }
+
+
+        //[HttpGet]
+        //[Route("api/Settings/Users/UserAccess/checkUserLogins")]
+        //public IActionResult checkUserLogins(string UserName, string Password)
+        //{
+        //    UserAccessDTO user = new UserAccessDTO();
+        //    try
+        //    {
+        //        user = objUserAccess.CheckUsers(UserName, Password, Con,GlobalSchema);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new FinstaAppException(ex.ToString());
+        //    }
+        //    return Ok(user);
+        //}
+
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/CheckSchemaTransactions")]
+        public IActionResult CheckSchemaTransactions(string branchname, string fromdate, string todate)
+        {
+            List<SchemaDTO> schema = new List<SchemaDTO>();
+            try
+            {
+                schema = objUserAccess.CheckSchemaTransactions(branchname, fromdate, todate, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(schema);
+        }
+
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/GetEmployeeDtails")]
+        public IActionResult GetEmployeeDtails(string branchname)
+        {
+            List<EmployeeDTO> employee = new List<EmployeeDTO>();
+            try
+            {
+                employee = objUserAccess.GetEmployeeDtails(branchname, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(employee);
+        }
+
+        [Route("api/Settings/Users/UserAccess/PostAssetsDetails")]
+        [HttpPost]
+        public bool SaveAssetsInfo(AssetsDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objUserAccess.SaveAssetsInfo(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+        
+
+        [Route("api/Settings/Users/UserAccess/SaveOfflineAssetsInfo")]
+        [HttpPost]
+        public bool SaveOfflineAssetsInfo(AssetsDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objUserAccess.SaveOfflineAssetsInfo(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/ViewAssetsInvoice")]
+        [HttpGet]
+        public IActionResult ViewAssetsInvoice(int pBranchId)
+        {
+            List<AssetsDTO> assetslist = new List<AssetsDTO>();
+            try
+            {
+                assetslist = objUserAccess.ViewAssetsInvoice(Con,pBranchId);
+                return Ok(assetslist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+
+
+        [Route("api/Settings/Users/UserAccess/getAssetsCodes")]
+        [HttpGet]
+        public IActionResult getAssetsCodes(string natureofasset, string subclassificationofasset)
+        {
+            List<AssetcodesDTO> assetcodelist = new List<AssetcodesDTO>();
+            try
+            {
+                assetcodelist = objUserAccess.getAssetsCodes(Con, natureofasset, subclassificationofasset);
+                return Ok(assetcodelist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+
+        [Route("api/Settings/Users/UserAccess/getAssetsCodesInformation")]
+        [HttpGet]
+        public IActionResult getAssetsCodesInformation(string Assetcode)
+        {
+            AssetcodesDTO assetcodelist = new AssetcodesDTO();
+            try
+            {
+                assetcodelist = objUserAccess.getAssetsCodesInformation(Assetcode, Con);
+                return Ok(assetcodelist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+
+        [Route("api/Settings/Users/UserAccess/ViewAssetsClasificationdetails")]
+        [HttpGet]
+        public IActionResult ViewAssetsClasificationdetails(string branchname)
+        {
+            List<ViewAssetsClasificationDTO> assetcodeslist = new List<ViewAssetsClasificationDTO>();
+            try
+            {
+                assetcodeslist = objUserAccess.ViewAssetsClasificationdetails(branchname, Con);
+                return Ok(assetcodeslist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+
+
+
+
+
+        [Route("api/Settings/Users/UserAccess/MultiFileUploads")]
+        [HttpPost]
+        [RequestFormLimits(MultipartBodyLengthLimit = 209715200)]
+        public IActionResult Uploadmultiples(string subfoldername)
+        {
+            try
+            {
+                string UploadfolderName = string.Empty;
+                List<string> UploadFilepathList = new List<string>();
+                var i = 0;
+                var files = Request.Form.Files;
+                var filescount = Request.Form.Files.Count;
+                for (i = 0; i < filescount; i++)
+                {
+
+
+                    var file = Request.Form.Files[i];
+                    if (subfoldername == "Invoices")
+                    {
+                        UploadfolderName = "Upload/Invoices";
+                    }
+                    else if (subfoldername == "Documents")
+                    {
+                        UploadfolderName = "Upload/Documents";
+
+                    }
+
+
+                    string webRootPath = _hostingEnvironment.ContentRootPath;
+                    string UploadPath = Path.Combine(webRootPath, UploadfolderName);
+                    //string[] files123 = System.IO.Directory.GetFiles(UploadPath);
+
+
+                    if (!Directory.Exists(UploadPath))
+                    {
+                        Directory.CreateDirectory(UploadPath);
+
+                    }
+                    if (file.Length > 0)
+                    {
+                        //var NewFileName = Request.Form["NewFileName"].ToString();
+                        //ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName
+                        string fileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+                        string extension = Path.GetExtension(fileName);
+                        string fullPath = Path.Combine(UploadPath, fileName);
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            file.CopyTo(stream);
+                        }
+                        UploadFilepathList.Add(fullPath);
+                        UploadFilepathList.Add(fileName);
+                    }
+                }
+
+
+                return Ok(UploadFilepathList);
+
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, "Internal server error");
+                throw new FinstaAppException(ex.ToString());
+            }
+        }
+        [Route("api/Settings/Users/UserAccess/ConvertImagepathtobase64")]
+        [HttpGet]
+        public IActionResult ConvertImagepathtobase64(string strPath)
+        {
+            string base64String = string.Empty;
+            List<string> imagebase64stringlist = new List<string>();
+            string filePath = string.Empty;
+            try
+            {
+                using (System.Drawing.Image image = System.Drawing.Image.FromFile(strPath))
+                {
+                    using (MemoryStream m = new MemoryStream())
+                    {
+                        image.Save(m, image.RawFormat);
+                        byte[] imageBytes1 = m.ToArray();
+                        base64String = Convert.ToBase64String(imageBytes1);
+                        imagebase64stringlist.Add(base64String);
+
+                    }
+                }
+                return Ok(imagebase64stringlist);
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw new FinstaAppException(ex.ToString());
+            }
+        }
+
+        [Route("api/Settings/Users/UserAccess/SaveAssetsClasification")]
+        [HttpPost]
+        public bool SaveAssetsClasification(AssetsClasificationDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objUserAccess.SaveAssetsClasification(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/UpdateAssetCode")]
+        [HttpPost]
+        public bool UpdateAssetCode(AssetcodesDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objUserAccess.UpdateAssetCode(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+
+
+        [Route("api/Settings/Users/UserAccess/ViewAssetsClasification")]
+        [HttpGet]
+        public IActionResult ViewAssetsClasification(string typeofview)
+        {
+            List<AssetsClasificationDTO> assetcodeslist = new List<AssetsClasificationDTO>();
+            try
+            {
+                assetcodeslist = objUserAccess.ViewAssetsClasification(Con, typeofview);
+                return Ok(assetcodeslist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        [Route("api/Settings/Users/UserAccess/GetAssetsClasificationById")]
+        [HttpGet]
+        public IActionResult GetAssetsClasificationById(Int64 recordid, string branchname)
+        {
+            AssetsClasificationDTO assetcodeslist = new AssetsClasificationDTO();
+            try
+            {
+                assetcodeslist = objUserAccess.GetAssetsClasificationById(recordid, branchname, Con);
+                return Ok(assetcodeslist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/UpdateAssetsClasification")]
+        [HttpPost]
+        public bool UpdateAssetsClasification(AssetsClasificationListDTO _obj)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objUserAccess.UpdateAssetsClasification(Con, _obj);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/GetNatureofassets")]
+        [HttpGet]
+        public IActionResult GetNatureofassets()
+        {
+            List<AssetcodesDTO> assetcodelist = new List<AssetcodesDTO>();
+            try
+            {
+                assetcodelist = objUserAccess.GetNatureofassets(Con);
+                return Ok(assetcodelist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/GetSubclassificationofassets")]
+        [HttpGet]
+        public IActionResult GetSubclassificationofassets(string natureofasset)
+        {
+            List<AssetcodesDTO> assetcodelist = new List<AssetcodesDTO>();
+            try
+            {
+                assetcodelist = objUserAccess.GetSubclassificationofassets(Con, natureofasset);
+                return Ok(assetcodelist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+
+        [Route("api/Settings/Users/UserAccess/Getdifferenceamout")]
+        [HttpGet]
+        public IActionResult Getdifferenceamout(string transactonno)
+        {
+            List<SumofInvoiceamount> assetamount = new List<SumofInvoiceamount>();
+            try
+            {
+                assetamount = objUserAccess.Getdifferenceamout(Con, transactonno);
+                return Ok(assetamount);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [HttpPost]
+        [Route("api/Settings/Users/UserAccess/SaveRoleModule")]
+        public IActionResult SaveRoleModule([FromBody] RolemodulesDTO1 _RolemodulesDTO)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(_RolemodulesDTO.pModulename))
+                {
+                    if (objUserAccess.SaveRoleModule(_RolemodulesDTO, Con))
+                    {
+                        return Ok(true);
+                    }
+                    else
+                    {
+                        return StatusCode(StatusCodes.Status304NotModified);
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status406NotAcceptable);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw;
+            }
+        }
+
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/GetModulecount")]
+        public int GetModulecount(string Modulename)
+        {
+            int count = 0;
+            try
+            {
+                if (Convert.ToString(Modulename) != string.Empty)
+                {
+                    count = objUserAccess.GetModulecount(Modulename, Con);
+                }
+            }
+            catch (Exception Ex)
+            {
+                throw new FinstaAppException(Ex.ToString());
+            }
+            return count;
+        }
+
+        [HttpPost]
+        [Route("api/Settings/Users/UserAccess/SaveRoleSubModule")]
+        public IActionResult SaveRoleSubModule([FromBody] RolesubmodulesDTO1 _RolesubmodulesDTO)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(_RolesubmodulesDTO.pModulename) && !string.IsNullOrEmpty(_RolesubmodulesDTO.pSubmodulename))
+                {
+                    if (objUserAccess.SaveRoleSubModule(_RolesubmodulesDTO, Con))
+                    {
+                        return Ok(true);
+                    }
+                    else
+                    {
+                        return StatusCode(StatusCodes.Status304NotModified);
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status406NotAcceptable);
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("api/Settings/Users/UserAccess/SaveRoleFunction")]
+        public IActionResult SaveRoleFunction([FromBody] MenuandNavigationDTO1 _MenuandNavigationDTO)
+        {
+            try
+            {
+                bool IsValid = false;
+
+                if (!string.IsNullOrEmpty(_MenuandNavigationDTO.ptypeofoperation))
+                {
+                    if (_MenuandNavigationDTO.ptypeofoperation.Trim().ToUpper() == "CREATE")
+                    {
+                        if (!string.IsNullOrEmpty(_MenuandNavigationDTO.pModulename) && !string.IsNullOrEmpty(_MenuandNavigationDTO.pSubmodulename) && !string.IsNullOrEmpty(_MenuandNavigationDTO.pFunctionname) && !string.IsNullOrEmpty(_MenuandNavigationDTO.pFunctionurl))
+                        {
+                            IsValid = true;
+                        }
+                    }
+                    if (_MenuandNavigationDTO.ptypeofoperation.Trim().ToUpper() == "UPDATE" || _MenuandNavigationDTO.ptypeofoperation.Trim().ToUpper() == "DELETE")
+                    {
+                        if (Convert.ToString(_MenuandNavigationDTO.pFunctionId) != string.Empty && _MenuandNavigationDTO.pFunctionId > 0)
+                        {
+                            IsValid = true;
+                        }
+                    }
+                }
+                if (IsValid)
+                {
+                    if (objUserAccess.SaveRoleFunction(_MenuandNavigationDTO, Con))
+                    {
+                        return Ok(true);
+                    }
+                    else
+                    {
+                        return StatusCode(StatusCodes.Status304NotModified);
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status406NotAcceptable);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw;
+            }
+        }
+
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/GetSubmenucountbyMenu")]
+        public int GetSubmenucountbyMenu(string Modulename, string Submodulename)
+        {
+            int count = 0;
+            try
+            {
+                if (Convert.ToString(Modulename) != string.Empty && !string.IsNullOrEmpty(Submodulename))
+                {
+                    count = objUserAccess.GetSubmenucountbyMenu(Modulename, Submodulename, Con);
+                }
+            }
+            catch (Exception Ex)
+            {
+                throw new FinstaAppException(Ex.ToString());
+            }
+            return count;
+        }
+
+
+
+
+        [Route("api/Settings/Users/UserAccess/GetallRolesModules")]
+        [HttpGet]
+        public IActionResult GetallRolesModules()
+        {
+            List<RolemodulesDTO> Rolemodulelist = new List<RolemodulesDTO>();
+            try
+            {
+                Rolemodulelist = objUserAccess.GetallRolesModules(Con);
+                return Ok(Rolemodulelist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        [Route("api/Settings/Users/UserAccess/GetRolesSubModulesbyModule")]
+        [HttpGet]
+        public IActionResult GetRolesSubModulesbyModule(Int64 Moduleid)
+        {
+            List<RolesubmodulesDTO> Rolesubmodulelist = new List<RolesubmodulesDTO>();
+            try
+            {
+                Rolesubmodulelist = objUserAccess.GetRolesSubModulesbyModule(Con, Moduleid);
+                return Ok(Rolesubmodulelist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/GetMenuandSubmenuDetails")]
+        [HttpGet]
+        public IActionResult GetMenuandSubmenuDetails()
+        {
+            List<MenuandNavigationDTO> MenuandNavigationlist = new List<MenuandNavigationDTO>();
+            try
+            {
+                MenuandNavigationlist = objUserAccess.GetMenuandSubmenuDetails(Con);
+                return Ok(MenuandNavigationlist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+        [Route("api/Settings/Users/UserAccess/GetUserRights")]
+        [HttpGet]
+        public async Task<IActionResult> GetUserRights(string Type, string UserOrDesignation)
+        {
+            UserRightsFunctionsDTO = new UserRightsFunctionsDTO();
+            try
+            {
+                UserRightsFunctionsDTO = await objUserAccess.GetallUserModules(Type, UserOrDesignation, Con);
+                return UserRightsFunctionsDTO != null ? Ok(UserRightsFunctionsDTO) : (IActionResult)StatusCode(StatusCodes.Status204NoContent);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw;
+            }
+        }
+        [Route("api/Settings/Users/UserAccess/GetRoles")]
+        [HttpGet]
+        public async Task<IActionResult> GetRoles()
+        {
+            lstRoleDTO = new List<RoleDTO>();
+            try
+            {
+                lstRoleDTO = await objUserAccess.BindRoles(Con);
+                if (lstRoleDTO != null && lstRoleDTO.Count > 0)
+                {
+                    return Ok(lstRoleDTO);
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status204NoContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw new FinstaAppException(ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Get All Users
+        /// </summary>
+
+        [Route("api/Settings/Users/UserAccess/GetUsers")]
+        [HttpGet]
+        public async Task<IActionResult> GetUsers()
+        {
+            lstUserDTO = new List<UserDTO>();
+            try
+            {
+                lstUserDTO = await objUserAccess.BindUsers(Con);
+                if (lstUserDTO != null && lstUserDTO.Count > 0)
+                {
+                    return Ok(lstUserDTO);
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status204NoContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw new FinstaAppException(ex.ToString());
+            }
+        }
+
+        [HttpPost]
+        [Route("api/Settings/Users/UserAccess/SaveUserRight")]
+        public async Task<IActionResult> SaveUserRight(string Type, string UserOrDesignation, UserRightsFunctionsDTO UserRightsFunctionsDTO)
+        {
+            bool isSaved = false;
+            try
+            {
+                isSaved = await objUserAccess.SaveUserRight(Type, UserOrDesignation, UserRightsFunctionsDTO, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(isSaved);
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/GetUserView")]
+        [HttpGet]
+        public async Task<IActionResult> GetUserView()
+        {
+            List<UserrightUserAccessDTO> lstUserAccessDTO = new List<UserrightUserAccessDTO>();
+            try
+            {
+                lstUserAccessDTO = await objUserAccess.GetAllUsersView(Con);
+                if (lstUserAccessDTO != null && lstUserAccessDTO.Count > 0)
+                {
+                    return Ok(lstUserAccessDTO);
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status204NoContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw new FinstaAppException(ex.ToString());
+            }
+        }
+
+
+
+
+        [Route("api/Settings/Users/UserAccess/ResetPassword")]
+        [HttpPost]
+        public IActionResult ResetPassword(string Username)
+        {
+
+            bool isSaved = false;
+            try
+            {
+                string Password = objUserAccess.GetDeafultPassword(Con);
+                string GenPass = objUserAccess.HashPassword(Password);
+                isSaved = objUserAccess.UpdateuserPassword(Username, GenPass, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(isSaved);
+
+        }
+
+
+
+        [Route("api/Settings/Users/UserAccess/ChangePassword")]
+        [HttpPost]
+        public IActionResult ChangePassword(string Username, string Password)
+        {
+
+            bool isSaved = false;
+            try
+            {
+                //string Password = objUserAccess.GetDeafultPassword(Con);
+                //string GenPass = objUserAccess.HashPassword(Password);
+                isSaved = objUserAccess.UpdateuserPassword(Username, Password, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(isSaved);
+
+        }
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/GetUserRightsBasedonUserName")]
+        public async Task<IActionResult> GetUserRightsBasedonUserName(string UserName)
+        {
+            UserRightsDTO = new UserRightsDTO();
+            try
+            {
+                UserRightsDTO = await objUserAccess.GetUserModulesBasedOnroleanduserid(UserName, Con);
+                if (!string.IsNullOrEmpty(UserRightsDTO.pImagepath))
+                {
+                    UserRightsDTO.pImage = getConvertImagepathtobase64(UserRightsDTO.pImagepath);
+                }
+                return UserRightsDTO != null ? Ok(UserRightsDTO) : (IActionResult)StatusCode(StatusCodes.Status204NoContent);
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw;
+            }
+        }
+
+        [NonAction]
+        public List<string> getConvertImagepathtobase64(string strPath)
+        {
+            string base64String = string.Empty;
+            List<string> imagebase64stringlist = new List<string>();
+            string filePath = string.Empty;
+            try
+            {
+
+                // strPath = "D:\\GITHUB\\FINSTA\\FinstaGeneric_Api\\ContactImages\\03d81568-f89a-469a-8d34-92f97ca4f433.jpg";
+                using (System.Drawing.Image image = System.Drawing.Image.FromFile(strPath))
+                {
+                    using (MemoryStream m = new MemoryStream())
+                    {
+                        image.Save(m, image.RawFormat);
+                        byte[] imageBytes1 = m.ToArray();
+                        base64String = Convert.ToBase64String(imageBytes1);
+                        imagebase64stringlist.Add(base64String);
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return imagebase64stringlist;
+        }
+
+
+        [Route("api/Settings/Users/UserAccess/UpdateFunctionSortOrder")]
+        [HttpPost]
+        public IActionResult UpdateFunctionSortOrder(SortOrderlist obkSortOrderandQuicklinksDTO)
+        {
+            bool isSaved = false;
+            try
+            {
+                isSaved = objUserAccess.UpdateFunctionSortOrder(obkSortOrderandQuicklinksDTO, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(isSaved);
+        }
+
+        [Route("api/Settings/Users/UserAccess/AssetsClasificationById")]
+        [HttpGet]
+        public IActionResult AssetsClasificationById(Int64 recordid, string branchname)
+        {
+            List<AssetsClasificationListDTO1> Clasification = new List<AssetsClasificationListDTO1>();
+            try
+            {
+                Clasification = objUserAccess.AssetsClasificationById(recordid, branchname, Con);
+                return Ok(Clasification);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/SaveExpenditure")]
+        [HttpPost]
+        public bool SaveExpenditure(ExpenditureDTO Expenditure)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objUserAccess.SaveExpenditure(Con, Expenditure);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+        
+
+        [Route("api/Settings/Users/UserAccess/ViewExpenditure")]
+        [HttpGet]
+        public IActionResult ViewExpenditure()
+        {
+            List<ExpenditureDTO> expenditurelist = new List<ExpenditureDTO>();
+            try
+            {
+                expenditurelist = objUserAccess.ViewExpenditure(Con);
+                return Ok(expenditurelist);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/SaveMasterAssetcodes")]
+        [HttpPost]
+        public bool SaveMasterAssetcodes(AssetcodesDTO AseetCodes)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objUserAccess.SaveMasterAssetcodes(Con, AseetCodes);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/GetMasterAssetCodeCount")]
+        public int GetMasterAssetCodeCount(string natureofaaset)
+        {
+            int count = 0;
+            try
+            {
+                if (Convert.ToString(natureofaaset) != string.Empty)
+                {
+                    count = objUserAccess.GetMasterAssetCodeCount(natureofaaset, Con);
+                }
+            }
+            catch (Exception Ex)
+            {
+                throw new FinstaAppException(Ex.ToString());
+            }
+            return count;
+        }
+
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/GetAssetCodeCount")]
+        public int GetAssetCodeCount(string assetcode)
+        {
+            int count = 0;
+            try
+            {
+                if (Convert.ToString(assetcode) != string.Empty)
+                {
+                    count = objUserAccess.GetAssetCodeCount(assetcode, Con);
+                }
+            }
+            catch (Exception Ex)
+            {
+                throw new FinstaAppException(Ex.ToString());
+            }
+            return count;
+        }
+
+        [Route("api/Settings/Users/UserAccess/SaveMasternatureOfAsset")]
+        [HttpPost]
+        public bool SaveMasternatureOfAsset(NatureofAssetDTO _NatureofAssetDTO)
+        {
+
+            bool issaved;
+            try
+            {
+                issaved = objUserAccess.SaveMasternatureOfAsset(Con,_NatureofAssetDTO);
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+                issaved = false;
+            }
+            return issaved;
+
+        }
+
+
+        [Route("api/Settings/Users/UserAccess/GetMasterNatureofAsset")]
+        [HttpGet]
+        public IActionResult GetMasterNatureofAsset()
+        {
+            List<NatureofAssetDTO> NatureofAsset = new List<NatureofAssetDTO>();
+            try
+            {
+                NatureofAsset = objUserAccess.GetMasterNatureofAsset(Con);
+                return Ok(NatureofAsset);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/GetMasterSubclasssificationcount")]
+        public int GetMasterSubclasssificationcount(string natureofasset, string Subclasssification)
+        {
+            int count = 0;
+            try
+            {
+                if (Convert.ToString(natureofasset) != string.Empty && !string.IsNullOrEmpty(Subclasssification))
+                {
+                    count = objUserAccess.GetMasterSubclasssificationcount( natureofasset, Subclasssification, Con);
+                }
+            }
+            catch (Exception Ex)
+            {
+                throw new FinstaAppException(Ex.ToString());
+            }
+            return count;
+        }
+
+
+        [HttpPost]
+        [Route("api/Settings/Users/UserAccess/SaveMasterSubClasssification")]
+        public IActionResult SaveMasterSubClasssification([FromBody] SubclassificationfAssetDTO _SubclassificationfAssetDTO)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(_SubclassificationfAssetDTO.pnatureofasset) && !string.IsNullOrEmpty(_SubclassificationfAssetDTO.psubclassification ))
+                {
+                    if (objUserAccess.SaveMasterSubClasssification(_SubclassificationfAssetDTO, Con))
+                    {
+                        return Ok(true);
+                    }
+                    else
+                    {
+                        return StatusCode(StatusCodes.Status304NotModified);
+                    }
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status406NotAcceptable);
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+                throw;
+            }
+        }
+
+        [Route("api/Settings/Users/UserAccess/GetMasterSubClasssificationbyid")]
+        [HttpGet]
+        public IActionResult GetMasterSubClasssificationbyid(Int64  natureofassetid)
+        {
+            List<SubclassificationfAssetDTO> SubclassificationfAsset = new List<SubclassificationfAssetDTO>();
+            try
+            {
+                SubclassificationfAsset = objUserAccess.GetMasterSubClasssificationbyid(Con, natureofassetid);
+                return Ok(SubclassificationfAsset);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+        [Route("api/Settings/Users/UserAccess/GetsubclassificationDetailsbyid")]
+        [HttpGet]
+        public IActionResult GetsubclassificationDetailsbyid(string natureofasset)
+        {
+            List<SubclassificationfAssetDTO> Subclassification = new List<SubclassificationfAssetDTO>();
+            try
+            {
+                Subclassification = objUserAccess.GetsubclassificationDetailsbyid(Con,natureofasset );
+                return Ok(Subclassification);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal Server Error");
+            }
+
+        }
+
+
+        [HttpGet]
+        [Route("api/Settings/Users/UserAccess/GetVehiclecount")]
+        public IActionResult GetVehiclecount(string branchname, string transno)
+        {
+            List<SchemaDTO> schema = new List<SchemaDTO>();
+            try
+            {
+                schema = objUserAccess.GetVehiclecount(branchname,transno, Con);
+            }
+            catch (Exception ex)
+            {
+                throw new FinstaAppException(ex.ToString());
+            }
+            return Ok(schema);
+        }
+    }
+}
