@@ -1,0 +1,71 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using KCF_Auctions_Infrastructure.Settings.Users;
+
+namespace KCF_Auctions_Repository.Interfaces.Settings.Users
+{
+   public interface IUserAccess
+    {
+
+
+
+        StatusDTO CheckUser(string UserName, string PassWord, string connectionString);
+
+        //UserAccessDTO CheckUsers(string UserName, string PassWord, string connectionString,string GlobalSchema);
+        public List<SchemaDTO> CheckSchemaTransactions(string branchname, string fromdate, string todate, string connectionString);
+        public List<EmployeeDTO> GetEmployeeDtails(string branchname, string connectionString);
+        public bool SaveAssetsInfo(string Con, AssetsDTO _obj);
+        public bool SaveOfflineAssetsInfo(string Con, AssetsDTO _obj);
+
+        public List<AssetsDTO> ViewAssetsInvoice(string Con, int pBranchId);
+        public List<AssetcodesDTO> getAssetsCodes(string Con,string natureofasset, string subclassificationofasset);
+        public AssetcodesDTO getAssetsCodesInformation(string Assetcode, string Con);
+        public List<ViewAssetsClasificationDTO> ViewAssetsClasificationdetails(string branchname, string Con);
+        public bool UpdateAssetCode(string Con, AssetcodesDTO _obj);
+        public bool SaveAssetsClasification(string Con, AssetsClasificationDTO _obj);
+
+        public List<AssetsClasificationDTO> ViewAssetsClasification(string Con, string typeofview);
+        public AssetsClasificationDTO GetAssetsClasificationById(Int64 recordid, string branchname, string Con);
+
+        public bool UpdateAssetsClasification(string Con, AssetsClasificationListDTO _obj);
+        public List<AssetcodesDTO> GetNatureofassets(string Con);
+        public List<AssetcodesDTO> GetSubclassificationofassets(string Con, string natureofasset);
+        public List<SumofInvoiceamount> Getdifferenceamout(string Con, string transactonno);
+
+        bool SaveRoleModule(RolemodulesDTO1 _RolemodulesDTO, string Connectionstring);
+        int GetModulecount(string Modulename, string connectionString);
+        bool SaveRoleSubModule(RolesubmodulesDTO1 _RolemodulesDTO, string Connectionstring);
+        bool SaveRoleFunction(MenuandNavigationDTO1 _MenuandNavigationDTO, string Connectionstring);
+        int GetSubmenucountbyMenu(string Modulename, string Submodulename, string connectionString);
+        public List<RolemodulesDTO> GetallRolesModules(string Con);
+        public List<RolesubmodulesDTO> GetRolesSubModulesbyModule(string Con,Int64  Moduleid);
+        public List<MenuandNavigationDTO> GetMenuandSubmenuDetails(string Con);
+        Task<UserRightsFunctionsDTO> GetallUserModules(string Type, string UserOrDesignation, string connectionString);
+        Task<List<RoleDTO>> BindRoles(string ConnectionString);
+        Task<List<UserDTO>> BindUsers(string ConnectionString);
+        Task<bool> SaveUserRight(string Type, string UserOrDesignation, UserRightsFunctionsDTO UserRightsFunctionsDTO, string connectionString);
+        Task<List<UserrightUserAccessDTO>> GetAllUsersView(string connectionString);
+        string GetDeafultPassword(string ConnectionString);
+        string HashPassword(string password);
+        bool UpdateuserPassword(string Username, string password, string connectionString);
+        Task<UserRightsDTO> GetUserModulesBasedOnroleanduserid(string UserName, string connectionString);
+        bool UpdateFunctionSortOrder(SortOrderlist obkSortOrderandQuicklinksDTO, string ConnectionString);
+        List<AssetsClasificationListDTO1> AssetsClasificationById(Int64 recordid, string branchname, string Con);
+        public bool SaveExpenditure(string Con, ExpenditureDTO Expenditure);
+        public List<ExpenditureDTO> ViewExpenditure(string Con);
+        public bool SaveMasterAssetcodes(string Con, AssetcodesDTO Assetcodes);
+        int GetMasterAssetCodeCount(string natureofaaset, string connectionString);
+        int GetAssetCodeCount(string assetcode, string connectionString);
+        public bool SaveMasternatureOfAsset(string Con, NatureofAssetDTO _NatureofAssetDTO);
+        public List<NatureofAssetDTO>  GetMasterNatureofAsset(string Con);
+        int GetMasterSubclasssificationcount(string natureofasset, string Subclasssification, string connectionString);
+        bool SaveMasterSubClasssification(SubclassificationfAssetDTO _SubclassificationfAssetDTO, string Connectionstring);
+
+        public List<SubclassificationfAssetDTO> GetMasterSubClasssificationbyid(string Con, Int64 natureofassetid);
+        public List<SubclassificationfAssetDTO> GetsubclassificationDetailsbyid(string Con, string  natureofassetid);
+        public List<SchemaDTO> GetVehiclecount(string branchname, string transno, string connectionString);
+
+    }
+}
